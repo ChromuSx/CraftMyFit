@@ -1,12 +1,312 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="CraftMyFit.Views.Workout.WorkoutPlanDetailPage"
-             Title="WorkoutPlanDetailPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Workout.WorkoutPlanDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding PlanTitle}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:DateTimeToStringConverter x:Key="DateTimeConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Modifica"
+                     IconImageSource="edit.png"
+                     Command="{Binding EditPlanCommand}" />
+        <ToolbarItem Text="Condividi"
+                     IconImageSource="share.png"
+                     Command="{Binding SharePlanCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid>
+        <!-- Contenuto principale -->
+        <ScrollView>
+            <StackLayout Padding="0" Spacing="0">
+
+                <!-- Header con informazioni principali -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                       HasShadow="False"
+                       CornerRadius="0"
+                       Padding="20">
+                    <StackLayout Spacing="10">
+                        <Label Text="{Binding PlanTitle}" 
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="White"
+                               HorizontalOptions="Center" />
+
+                        <Label Text="{Binding PlanDescription}" 
+                               FontSize="16"
+                               TextColor="White"
+                               Opacity="0.9"
+                               HorizontalOptions="Center"
+                               HorizontalTextAlignment="Center"
+                               IsVisible="{Binding HasDescription}" />
+
+                        <!-- Statistiche piano -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="20" Margin="0,10,0,0">
+
+                            <StackLayout Grid.Column="0" HorizontalOptions="Center">
+                                <Label Text="{Binding WorkoutDaysCount}" 
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Giorni" 
+                                       FontSize="12"
+                                       TextColor="White"
+                                       Opacity="0.8"
+                                       HorizontalOptions="Center" />
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="1" HorizontalOptions="Center">
+                                <Label Text="{Binding TotalExercisesCount}" 
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Esercizi" 
+                                       FontSize="12"
+                                       TextColor="White"
+                                       Opacity="0.8"
+                                       HorizontalOptions="Center" />
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="2" HorizontalOptions="Center">
+                                <Label Text="💪" 
+                                       FontSize="20"
+                                       TextColor="White"
+                                       HorizontalOptions="Center" />
+                                <Label Text="Livello" 
+                                       FontSize="12"
+                                       TextColor="White"
+                                       Opacity="0.8"
+                                       HorizontalOptions="Center" />
+                            </StackLayout>
+                        </Grid>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Azioni principali -->
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="True"
+                       CornerRadius="0"
+                       Padding="20">
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15">
+
+                        <Button Grid.Column="0"
+                                Text="🚀 Inizia Allenamento"
+                                Command="{Binding StartWorkoutCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="16"
+                                FontAttributes="Bold"
+                                Padding="0,15" />
+
+                        <Button Grid.Column="1"
+                                Text="✏️ Modifica Piano"
+                                Command="{Binding EditPlanCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                BorderColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                BorderWidth="2"
+                                CornerRadius="8"
+                                FontSize="16"
+                                Padding="0,15" />
+                    </Grid>
+                </Frame>
+
+                <!-- Giorni di allenamento -->
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="True"
+                       CornerRadius="0"
+                       Padding="20"
+                       Margin="0,10,0,0"
+                       IsVisible="{Binding HasWorkoutDays}">
+
+                    <StackLayout Spacing="15">
+                        <Label Text="Giorni di Allenamento" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                        <CollectionView ItemsSource="{Binding WorkoutDays}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Frame BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#404040}"
+                                           HasShadow="False"
+                                           CornerRadius="12"
+                                           Padding="16"
+                                           Margin="0,5">
+
+                                        <Frame.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectWorkoutDayCommand}"
+                                                                  CommandParameter="{Binding}" />
+                                        </Frame.GestureRecognizers>
+
+                                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+
+                                            <!-- Icona giorno -->
+                                            <Frame Grid.Column="0"
+                                                   BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                                                   HasShadow="False"
+                                                   CornerRadius="8"
+                                                   Padding="8"
+                                                   WidthRequest="40"
+                                                   HeightRequest="40">
+                                                <Label Text="📅" 
+                                                       FontSize="18"
+                                                       HorizontalOptions="Center"
+                                                       VerticalOptions="Center" />
+                                            </Frame>
+
+                                            <!-- Info giorno -->
+                                            <StackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                                <Label Text="{Binding Title}" 
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                                                <Label Text="{Binding DayOfWeek}" 
+                                                       FontSize="14"
+                                                       TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+
+                                                <Label Text="{Binding Exercises.Count, StringFormat='{0} esercizi'}" 
+                                                       FontSize="12"
+                                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                            </StackLayout>
+
+                                            <!-- Indicatore -->
+                                            <Label Grid.Column="2"
+                                                   Text=">" 
+                                                   FontSize="18"
+                                                   TextColor="{AppThemeBinding Light=#ccc, Dark=#666}"
+                                                   VerticalOptions="Center" />
+                                        </Grid>
+                                    </Frame>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Informazioni aggiuntive -->
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="True"
+                       CornerRadius="0"
+                       Padding="20"
+                       Margin="0,10,0,0">
+
+                    <StackLayout Spacing="15">
+                        <Label Text="Informazioni Piano" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="20" RowSpacing="10">
+
+                            <!-- Data creazione -->
+                            <StackLayout Grid.Column="0" Grid.Row="0">
+                                <Label Text="Data Creazione" 
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                <Label Text="{Binding CreatedDateText}" 
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            </StackLayout>
+
+                            <!-- Ultima modifica -->
+                            <StackLayout Grid.Column="1" Grid.Row="0">
+                                <Label Text="Ultima Modifica" 
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                <Label Text="{Binding ModifiedDateText}" 
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            </StackLayout>
+
+                            <!-- Giorni della settimana -->
+                            <StackLayout Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
+                                <Label Text="Giorni della Settimana" 
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                <Label Text="{Binding WorkoutDaysListText}" 
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            </StackLayout>
+                        </Grid>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Azioni secondarie -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#404040}"
+                       HasShadow="False"
+                       CornerRadius="0"
+                       Padding="20"
+                       Margin="0,10,0,0">
+
+                    <StackLayout Spacing="10">
+                        <Label Text="Altre Azioni" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                        <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+
+                            <Button Grid.Column="0" Grid.Row="0"
+                                    Text="📋 Duplica Piano"
+                                    Command="{Binding DuplicatePlanCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    Padding="0,12" />
+
+                            <Button Grid.Column="1" Grid.Row="0"
+                                    Text="📤 Condividi"
+                                    Command="{Binding SharePlanCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#6f42c1, Dark=#7b68ee}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    Padding="0,12" />
+
+                            <Button Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2"
+                                    Text="🗑️ Elimina Piano"
+                                    Command="{Binding DeletePlanCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    FontSize="14"
+                                    Padding="0,12" />
+                        </Grid>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Spazio aggiuntivo -->
+                <BoxView HeightRequest="20" Color="Transparent" />
+
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Loading indicator overlay -->
+        <Grid IsVisible="{Binding IsLoading}"
+              BackgroundColor="{AppThemeBinding Light=#80000000, Dark=#80000000}">
+            <ActivityIndicator IsVisible="{Binding IsLoading}"
+                               IsRunning="{Binding IsLoading}"
+                               Color="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+        </Grid>
+    </Grid>
+
 </ContentPage>

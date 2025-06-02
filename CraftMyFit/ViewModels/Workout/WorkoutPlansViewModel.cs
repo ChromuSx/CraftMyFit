@@ -121,10 +121,10 @@ namespace CraftMyFit.ViewModels.Workout
                 IsBusy = true;
 
                 // Ottieni l'ID utente corrente (per ora hardcoded)
-                var currentUserId = _preferenceService.GetInt("current_user_id", 1);
+                int currentUserId = _preferenceService.GetInt("current_user_id", 1);
 
-                var workoutPlans = await _workoutPlanRepository.GetByUserIdAsync(currentUserId);
-                _workoutPlans = new ObservableCollection<WorkoutPlan>(workoutPlans);
+                List<WorkoutPlan> workoutPlans = await _workoutPlanRepository.GetByUserIdAsync(currentUserId);
+                _workoutPlans = [.. workoutPlans];
 
                 await ApplyFilters();
             }
@@ -142,10 +142,18 @@ namespace CraftMyFit.ViewModels.Workout
         {
             try
             {
+                // Debug: verifica che il comando venga eseguito
+                await _dialogService.ShowAlertAsync("Debug", "Comando eseguito, tentativo di navigazione...");
+
                 await _navigationService.NavigateToAsync("createworkoutplan");
+
+                // Se arrivi qui, la navigazione è andata a buon fine
+                System.Diagnostics.Debug.WriteLine("Navigazione completata con successo");
             }
             catch(Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Errore nella navigazione: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nella navigazione: {ex.Message}");
             }
         }
@@ -206,7 +214,7 @@ namespace CraftMyFit.ViewModels.Workout
 
             try
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Elimina Piano",
                     $"Sei sicuro di voler eliminare il piano '{workoutPlan.Title}'?",
                     "Elimina",
@@ -251,7 +259,7 @@ namespace CraftMyFit.ViewModels.Workout
                     ModifiedDate = DateTime.Now,
                     UserId = fullPlan.UserId,
                     User = new Models.User { Id = fullPlan.UserId, Name = "User" }, // Placeholder
-                    WorkoutDays = new List<WorkoutDay>() // Inizializza lista vuota
+                    WorkoutDays = [] // Inizializza lista vuota
                 };
 
                 int newPlanId = await _workoutPlanRepository.AddAsync(duplicatedPlan);
