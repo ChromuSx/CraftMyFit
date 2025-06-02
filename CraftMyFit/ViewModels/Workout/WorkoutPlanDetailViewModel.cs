@@ -16,7 +16,7 @@ namespace CraftMyFit.ViewModels.Workout
         private readonly IPreferenceService _preferenceService;
 
         private WorkoutPlan? _workoutPlan;
-        private ObservableCollection<WorkoutDay> _workoutDays = new();
+        private ObservableCollection<WorkoutDay> _workoutDays = [];
         private WorkoutDay? _selectedWorkoutDay;
         private bool _isLoading;
 
@@ -112,7 +112,10 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async void OnWorkoutPlanChanged()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             Title = WorkoutPlan.Title;
             await LoadDetails();
@@ -120,19 +123,22 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task LoadDetails()
         {
-            if(WorkoutPlan == null || IsLoading) return;
+            if(WorkoutPlan == null || IsLoading)
+            {
+                return;
+            }
 
             try
             {
                 IsLoading = true;
 
                 // Carica i dettagli completi del piano di allenamento
-                var fullPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(WorkoutPlan.Id);
+                WorkoutPlan fullPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(WorkoutPlan.Id);
                 if(fullPlan != null)
                 {
                     WorkoutPlan = fullPlan;
-                    WorkoutDays = new ObservableCollection<WorkoutDay>(
-                        fullPlan.WorkoutDays?.OrderBy(wd => wd.OrderIndex) ?? new List<WorkoutDay>());
+                    // Correzione dell'operatore ??
+                    WorkoutDays = fullPlan.WorkoutDays != null ? [.. fullPlan.WorkoutDays.OrderBy(wd => wd.OrderIndex)] : [];
                 }
             }
             catch(Exception ex)
@@ -144,10 +150,12 @@ namespace CraftMyFit.ViewModels.Workout
                 IsLoading = false;
             }
         }
-
         private async Task StartWorkout()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             try
             {
@@ -166,16 +174,16 @@ namespace CraftMyFit.ViewModels.Workout
                 }
                 else
                 {
-                    var dayNames = WorkoutDays.Select(wd => $"{GetDayName(wd.DayOfWeek)} - {wd.Title}").ToArray();
-                    var selectedDayName = await _dialogService.ShowActionSheetAsync(
+                    string[] dayNames = WorkoutDays.Select(wd => $"{GetDayName(wd.DayOfWeek)} - {wd.Title}").ToArray();
+                    string? selectedDayName = await _dialogService.ShowActionSheetAsync(
                         "Seleziona Allenamento",
                         "Annulla",
                         null,
                         dayNames);
 
-                    if(selectedDayName != null && selectedDayName != "Annulla")
+                    if(selectedDayName is not null and not "Annulla")
                     {
-                        var index = Array.IndexOf(dayNames, selectedDayName);
+                        int index = Array.IndexOf(dayNames, selectedDayName);
                         if(index >= 0 && index < WorkoutDays.Count)
                         {
                             selectedDay = WorkoutDays[index];
@@ -185,7 +193,7 @@ namespace CraftMyFit.ViewModels.Workout
 
                 if(selectedDay != null)
                 {
-                    var parameters = new Dictionary<string, object>
+                    Dictionary<string, object> parameters = new()
                     {
                         { "WorkoutPlan", WorkoutPlan },
                         { "WorkoutDay", selectedDay }
@@ -202,11 +210,14 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task EditPlan()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             try
             {
-                var parameters = new Dictionary<string, object>
+                Dictionary<string, object> parameters = new()
                 {
                     { "WorkoutPlan", WorkoutPlan },
                     { "IsEdit", true }
@@ -222,11 +233,14 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task DuplicatePlan()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             try
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Duplica Piano",
                     $"Vuoi creare una copia di '{WorkoutPlan.Title}'?",
                     "Duplica",
@@ -235,17 +249,19 @@ namespace CraftMyFit.ViewModels.Workout
                 if(confirmed)
                 {
                     // Crea una copia del piano
-                    var duplicatedPlan = new WorkoutPlan
+                    WorkoutPlan duplicatedPlan = new()
                     {
                         Title = $"Copia di {WorkoutPlan.Title}",
                         Description = WorkoutPlan.Description,
                         WorkoutDaysJson = WorkoutPlan.WorkoutDaysJson,
                         CreatedDate = DateTime.Now,
                         ModifiedDate = DateTime.Now,
-                        UserId = WorkoutPlan.UserId
+                        UserId = WorkoutPlan.UserId,
+                        User = new Models.User { Id = WorkoutPlan.UserId, Name = "User" }, // Placeholder
+                        WorkoutDays = [] // Inizializza lista vuota
                     };
 
-                    await _workoutPlanRepository.AddAsync(duplicatedPlan);
+                    _ = await _workoutPlanRepository.AddAsync(duplicatedPlan);
                     await _dialogService.ShowAlertAsync("Successo", "Piano duplicato con successo!");
                 }
             }
@@ -257,11 +273,14 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task DeletePlan()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             try
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Elimina Piano",
                     $"Sei sicuro di voler eliminare '{WorkoutPlan.Title}'? Questa azione non può essere annullata.",
                     "Elimina",
@@ -282,13 +301,16 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task SelectWorkoutDay(WorkoutDay? workoutDay)
         {
-            if(workoutDay == null) return;
+            if(workoutDay == null)
+            {
+                return;
+            }
 
             SelectedWorkoutDay = workoutDay;
 
             // Mostra dettagli del giorno di allenamento
-            var exerciseCount = workoutDay.Exercises?.Count ?? 0;
-            var message = exerciseCount == 0 ?
+            int exerciseCount = workoutDay.Exercises?.Count ?? 0;
+            string message = exerciseCount == 0 ?
                 "Questo giorno non contiene esercizi." :
                 $"Questo giorno contiene {exerciseCount} esercizio/i.";
 
@@ -297,11 +319,14 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task SharePlan()
         {
-            if(WorkoutPlan == null) return;
+            if(WorkoutPlan == null)
+            {
+                return;
+            }
 
             try
             {
-                var shareText = $"Piano di Allenamento: {WorkoutPlan.Title}\n";
+                string shareText = $"Piano di Allenamento: {WorkoutPlan.Title}\n";
 
                 if(HasDescription)
                 {
@@ -323,11 +348,14 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task ViewExercise(WorkoutExercise? workoutExercise)
         {
-            if(workoutExercise?.Exercise == null) return;
+            if(workoutExercise?.Exercise == null)
+            {
+                return;
+            }
 
             try
             {
-                var parameters = new Dictionary<string, object>
+                Dictionary<string, object> parameters = new()
                 {
                     { "Exercise", workoutExercise.Exercise }
                 };
@@ -340,42 +368,34 @@ namespace CraftMyFit.ViewModels.Workout
             }
         }
 
-        private async Task GoBack()
-        {
-            await _navigationService.GoBackAsync();
-        }
+        private async Task GoBack() => await _navigationService.GoBackAsync();
 
-        private string GetDayName(DayOfWeek dayOfWeek)
+        private string GetDayName(DayOfWeek dayOfWeek) => dayOfWeek switch
         {
-            return dayOfWeek switch
-            {
-                DayOfWeek.Monday => "Lun",
-                DayOfWeek.Tuesday => "Mar",
-                DayOfWeek.Wednesday => "Mer",
-                DayOfWeek.Thursday => "Gio",
-                DayOfWeek.Friday => "Ven",
-                DayOfWeek.Saturday => "Sab",
-                DayOfWeek.Sunday => "Dom",
-                _ => dayOfWeek.ToString()
-            };
-        }
+            DayOfWeek.Monday => "Lun",
+            DayOfWeek.Tuesday => "Mar",
+            DayOfWeek.Wednesday => "Mer",
+            DayOfWeek.Thursday => "Gio",
+            DayOfWeek.Friday => "Ven",
+            DayOfWeek.Saturday => "Sab",
+            DayOfWeek.Sunday => "Dom",
+            _ => dayOfWeek.ToString()
+        };
 
         #endregion
 
         #region Public Methods
 
-        public async Task OnWorkoutPlanUpdated()
-        {
+        public async Task OnWorkoutPlanUpdated() =>
             // Chiamato quando il piano viene aggiornato
             await LoadDetails();
-        }
 
         public void OnAppearing()
         {
             // Ricarica i dettagli quando la pagina appare
             if(WorkoutPlan != null)
             {
-                _ = Task.Run(async () => await LoadDetails());
+                _ = Task.Run(LoadDetails);
             }
         }
 

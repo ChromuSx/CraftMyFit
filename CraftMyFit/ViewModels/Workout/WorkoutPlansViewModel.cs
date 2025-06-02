@@ -249,13 +249,12 @@ namespace CraftMyFit.ViewModels.Workout
                     WorkoutDaysJson = fullPlan.WorkoutDaysJson,
                     CreatedDate = DateTime.Now,
                     ModifiedDate = DateTime.Now,
-                    UserId = fullPlan.UserId
+                    UserId = fullPlan.UserId,
+                    User = new Models.User { Id = fullPlan.UserId, Name = "User" }, // Placeholder
+                    WorkoutDays = new List<WorkoutDay>() // Inizializza lista vuota
                 };
 
                 int newPlanId = await _workoutPlanRepository.AddAsync(duplicatedPlan);
-
-                // TODO: Copiare anche i giorni di allenamento e gli esercizi
-                // Questo richiederebbe l'implementazione dei repository per WorkoutDay e WorkoutExercise
 
                 await LoadWorkoutPlans();
                 await _dialogService.ShowAlertAsync("Successo", "Piano duplicato con successo");

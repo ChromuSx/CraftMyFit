@@ -181,7 +181,9 @@ namespace CraftMyFit.ViewModels.Workout
                 DayOfWeek = day,
                 Title = GetDefaultWorkoutDayTitle(day),
                 OrderIndex = (int)day,
-                Exercises = []
+                Exercises = [],
+                WorkoutPlanId = 0, // Sarà impostato quando si salva il piano
+                WorkoutPlan = null! // Sarà impostato quando si salva il piano
             };
 
             WorkoutDays.Add(workoutDay);
@@ -244,7 +246,7 @@ namespace CraftMyFit.ViewModels.Workout
                 IsSaving = true;
 
                 // Crea il piano di allenamento
-                var currentUserId = _preferenceService.GetInt("current_user_id", 1);
+                int currentUserId = _preferenceService.GetInt("current_user_id", 1);
                 WorkoutPlan workoutPlan = new()
                 {
                     Title = PlanTitle.Trim(),
@@ -252,16 +254,13 @@ namespace CraftMyFit.ViewModels.Workout
                     CreatedDate = DateTime.Now,
                     ModifiedDate = DateTime.Now,
                     UserId = currentUserId,
+                    User = new Models.User { Id = currentUserId, Name = "User" }, // Placeholder
                     WorkoutDays = WorkoutDays.ToList(),
-                    // Imposta i giorni della settimana
-                    WorkoutDaysEnum = SelectedDays.ToList()
+                    WorkoutDaysJson = System.Text.Json.JsonSerializer.Serialize(SelectedDays.ToList()) // Inizializza JSON
                 };
 
                 // Salva nel database
                 int planId = await _workoutPlanRepository.AddAsync(workoutPlan);
-
-                // TODO: Salvare anche i WorkoutDay e WorkoutExercise separatamente
-                // Questo richiederebbe repository specifici per questi modelli
 
                 await _dialogService.ShowAlertAsync("Successo", "Piano di allenamento creato con successo!");
 
@@ -282,7 +281,7 @@ namespace CraftMyFit.ViewModels.Workout
         {
             if(HasChanges())
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Annulla Creazione",
                     "Sei sicuro di voler annullare? Le modifiche andranno perse.",
                     "Annulla",
@@ -313,15 +312,15 @@ namespace CraftMyFit.ViewModels.Workout
             }
 
             string[] dayNames = availableDays.Select(d => d.DisplayName).ToArray();
-            var selectedDayName = await _dialogService.ShowActionSheetAsync(
+            string? selectedDayName = await _dialogService.ShowActionSheetAsync(
                 "Seleziona Giorno",
                 "Annulla",
                 null,
                 dayNames);
 
-            if(selectedDayName is not null and not (object)"Annulla")
+            if(selectedDayName is not null and not "Annulla")
             {
-                DaySelectionItem dayItem = availableDays.FirstOrDefault(d => d.DisplayName == selectedDayName);
+                DaySelectionItem? dayItem = availableDays.FirstOrDefault(d => d.DisplayName == selectedDayName);
                 if(dayItem != null)
                 {
                     dayItem.IsSelected = true;
@@ -336,7 +335,7 @@ namespace CraftMyFit.ViewModels.Workout
                 return;
             }
 
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Rimuovi Giorno",
                 $"Sei sicuro di voler rimuovere {workoutDay.Title}?",
                 "Rimuovi",
@@ -359,7 +358,7 @@ namespace CraftMyFit.ViewModels.Workout
                 return;
             }
 
-            var newTitle = await _dialogService.ShowPromptAsync(
+            string? newTitle = await _dialogService.ShowPromptAsync(
                 "Modifica Titolo",
                 "Inserisci il nuovo titolo per questo giorno:",
                 workoutDay.Title);
@@ -392,13 +391,13 @@ namespace CraftMyFit.ViewModels.Workout
                 "HIIT"
             };
 
-            var selectedTemplate = await _dialogService.ShowActionSheetAsync(
+            string? selectedTemplate = await _dialogService.ShowActionSheetAsync(
                 "Seleziona Template",
                 "Annulla",
                 null,
                 templates);
 
-            if(selectedTemplate is not null and not (object)"Annulla")
+            if(selectedTemplate is not null and not "Annulla")
             {
                 await ApplyTemplate(selectedTemplate);
             }

@@ -20,7 +20,7 @@ namespace CraftMyFit.ViewModels.Exercises
         private string _exerciseName = string.Empty;
         private string _exerciseDescription = string.Empty;
         private string _selectedMuscleGroup = string.Empty;
-        private ObservableCollection<string> _selectedEquipment = new();
+        private ObservableCollection<string> _selectedEquipment = [];
         private bool _isEdit;
         private bool _isSaving;
         private bool _hasChanges;
@@ -40,7 +40,7 @@ namespace CraftMyFit.ViewModels.Exercises
             InitializeCollections();
 
             // Inizializza i comandi
-            SaveExerciseCommand = new Command(async () => await SaveExercise(), () => CanSaveExercise());
+            SaveExerciseCommand = new Command(async () => await SaveExercise(), CanSaveExercise);
             CancelCommand = new Command(async () => await Cancel());
             AddEquipmentCommand = new Command(async () => await AddEquipment());
             RemoveEquipmentCommand = new Command<string>(async (equipment) => await RemoveEquipment(equipment));
@@ -130,8 +130,8 @@ namespace CraftMyFit.ViewModels.Exercises
         }
 
         // Collezioni di opzioni disponibili
-        public ObservableCollection<string> AvailableMuscleGroups { get; set; } = new();
-        public ObservableCollection<string> AvailableEquipment { get; set; } = new();
+        public ObservableCollection<string> AvailableMuscleGroups { get; set; } = [];
+        public ObservableCollection<string> AvailableEquipment { get; set; } = [];
 
         // Proprietà calcolate
         public string SaveButtonText => IsSaving ? "Salvataggio..." : (IsEdit ? "Salva Modifiche" : "Crea Esercizio");
@@ -156,25 +156,25 @@ namespace CraftMyFit.ViewModels.Exercises
         private void InitializeCollections()
         {
             // Gruppi muscolari
-            var muscleGroups = new[]
+            string[] muscleGroups = new[]
             {
                 "Pettorali", "Schiena", "Spalle", "Bicipiti", "Tricipiti",
                 "Addominali", "Gambe", "Glutei", "Polpacci", "Avambracci", "Full Body"
             };
 
-            foreach(var group in muscleGroups)
+            foreach(string? group in muscleGroups)
             {
                 AvailableMuscleGroups.Add(group);
             }
 
             // Attrezzature disponibili
-            var equipment = new[]
+            string[] equipment = new[]
             {
                 "Manubri", "Bilanciere", "Kettlebell", "Bande elastiche",
                 "Panca", "Pull-up bar", "Tappetino", "Palla medica", "TRX", "Macchina per cavi"
             };
 
-            foreach(var item in equipment)
+            foreach(string? item in equipment)
             {
                 AvailableEquipment.Add(item);
             }
@@ -182,13 +182,16 @@ namespace CraftMyFit.ViewModels.Exercises
 
         private void OnExerciseChanged()
         {
-            if(Exercise == null) return;
+            if(Exercise == null)
+            {
+                return;
+            }
 
             // Popola i campi con i dati dell'esercizio esistente
             ExerciseName = Exercise.Name;
             ExerciseDescription = Exercise.Description;
             SelectedMuscleGroup = Exercise.MuscleGroup;
-            SelectedEquipment = new ObservableCollection<string>(Exercise.RequiredEquipment);
+            SelectedEquipment = [.. Exercise.RequiredEquipment];
 
             Title = $"Modifica: {Exercise.Name}";
             HasChanges = false;
@@ -196,44 +199,42 @@ namespace CraftMyFit.ViewModels.Exercises
 
         private void CheckForChanges()
         {
-            if(Exercise == null && IsEdit) return;
-
-            if(!IsEdit)
+            if(Exercise == null && IsEdit)
             {
-                HasChanges = !string.IsNullOrWhiteSpace(ExerciseName) ||
+                return;
+            }
+
+            HasChanges = !IsEdit
+                ? !string.IsNullOrWhiteSpace(ExerciseName) ||
                            !string.IsNullOrWhiteSpace(ExerciseDescription) ||
                            !string.IsNullOrWhiteSpace(SelectedMuscleGroup) ||
-                           SelectedEquipment.Any();
-            }
-            else
-            {
-                HasChanges = ExerciseName != Exercise?.Name ||
+                           SelectedEquipment.Any()
+                : ExerciseName != Exercise?.Name ||
                            ExerciseDescription != Exercise?.Description ||
                            SelectedMuscleGroup != Exercise?.MuscleGroup ||
-                           !SelectedEquipment.SequenceEqual(Exercise?.RequiredEquipment ?? new List<string>());
-            }
+                           !SelectedEquipment.SequenceEqual(Exercise?.RequiredEquipment ?? []);
         }
 
-        private bool CanSaveExercise()
-        {
-            return !string.IsNullOrWhiteSpace(ExerciseName) &&
+        private bool CanSaveExercise() => !string.IsNullOrWhiteSpace(ExerciseName) &&
                    !string.IsNullOrWhiteSpace(SelectedMuscleGroup) &&
                    !IsSaving;
-        }
 
         private async Task SaveExercise()
         {
-            if(!CanSaveExercise()) return;
+            if(!CanSaveExercise())
+            {
+                return;
+            }
 
             try
             {
                 IsSaving = true;
 
                 // Valida i dati
-                var nameValidation = ValidationHelper.ValidateWorkoutPlanTitle(ExerciseName); // Riusa la validazione del titolo
-                var descriptionValidation = ValidationHelper.ValidateDescription(ExerciseDescription, 1000);
+                ValidationResult nameValidation = ValidationHelper.ValidateWorkoutPlanTitle(ExerciseName); // Riusa la validazione del titolo
+                ValidationResult descriptionValidation = ValidationHelper.ValidateDescription(ExerciseDescription, 1000);
 
-                var combinedValidation = ValidationHelper.Combine(nameValidation, descriptionValidation);
+                ValidationResult combinedValidation = ValidationHelper.Combine(nameValidation, descriptionValidation);
                 if(!combinedValidation.IsValid)
                 {
                     await _dialogService.ShowAlertAsync("Errore di Validazione", combinedValidation.GetErrorsAsString());
@@ -243,7 +244,7 @@ namespace CraftMyFit.ViewModels.Exercises
                 // Verifica se il nome esiste già (per nuovi esercizi)
                 if(!IsEdit)
                 {
-                    var existingExercise = await _exerciseRepository.ExerciseExistsAsync(ExerciseName);
+                    bool existingExercise = await _exerciseRepository.ExerciseExistsAsync(ExerciseName);
                     if(existingExercise)
                     {
                         await _dialogService.ShowAlertAsync("Esercizio Esistente", "Esiste già un esercizio con questo nome.");
@@ -264,18 +265,18 @@ namespace CraftMyFit.ViewModels.Exercises
                 }
                 else
                 {
-                    // Crea nuovo esercizio
-                    var newExercise = new Exercise
+                    Exercise newExercise = new()
                     {
                         Name = ExerciseName.Trim(),
                         Description = ExerciseDescription?.Trim() ?? string.Empty,
                         MuscleGroup = SelectedMuscleGroup,
                         RequiredEquipment = SelectedEquipment.ToList(),
-                        ImagePath = string.Empty, // TODO: Implementare selezione immagine
-                        VideoPath = string.Empty  // TODO: Implementare selezione video
+                        RequiredEquipmentJson = System.Text.Json.JsonSerializer.Serialize(SelectedEquipment.ToList()), // Inizializza il JSON
+                        ImagePath = string.Empty,
+                        VideoPath = string.Empty
                     };
 
-                    await _exerciseRepository.AddAsync(newExercise);
+                    _ = await _exerciseRepository.AddAsync(newExercise);
                     await _dialogService.ShowAlertAsync("Successo", "Esercizio creato con successo!");
                 }
 
@@ -296,13 +297,16 @@ namespace CraftMyFit.ViewModels.Exercises
         {
             if(HasChanges)
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Annulla Modifiche",
                     "Sei sicuro di voler annullare? Le modifiche andranno perse.",
                     "Annulla Modifiche",
                     "Continua");
 
-                if(!confirmed) return;
+                if(!confirmed)
+                {
+                    return;
+                }
             }
 
             await _navigationService.GoBackAsync();
@@ -310,13 +314,13 @@ namespace CraftMyFit.ViewModels.Exercises
 
         private async Task SelectMuscleGroup()
         {
-            var selectedGroup = await _dialogService.ShowActionSheetAsync(
+            string? selectedGroup = await _dialogService.ShowActionSheetAsync(
                 "Seleziona Gruppo Muscolare",
                 "Annulla",
                 null,
                 AvailableMuscleGroups.ToArray());
 
-            if(selectedGroup != null && selectedGroup != "Annulla")
+            if(selectedGroup is not null and not "Annulla")
             {
                 SelectedMuscleGroup = selectedGroup;
             }
@@ -324,7 +328,7 @@ namespace CraftMyFit.ViewModels.Exercises
 
         private async Task AddEquipment()
         {
-            var availableItems = AvailableEquipment.Where(e => !SelectedEquipment.Contains(e)).ToArray();
+            string[] availableItems = AvailableEquipment.Where(e => !SelectedEquipment.Contains(e)).ToArray();
 
             if(!availableItems.Any())
             {
@@ -332,13 +336,13 @@ namespace CraftMyFit.ViewModels.Exercises
                 return;
             }
 
-            var selectedItem = await _dialogService.ShowActionSheetAsync(
+            string? selectedItem = await _dialogService.ShowActionSheetAsync(
                 "Aggiungi Attrezzatura",
                 "Annulla",
                 null,
                 availableItems);
 
-            if(selectedItem != null && selectedItem != "Annulla")
+            if(selectedItem is not null and not "Annulla")
             {
                 SelectedEquipment.Add(selectedItem);
                 CheckForChanges();
@@ -347,9 +351,12 @@ namespace CraftMyFit.ViewModels.Exercises
 
         private async Task RemoveEquipment(string? equipment)
         {
-            if(string.IsNullOrEmpty(equipment)) return;
+            if(string.IsNullOrEmpty(equipment))
+            {
+                return;
+            }
 
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Rimuovi Attrezzatura",
                 $"Vuoi rimuovere '{equipment}' dall'elenco?",
                 "Rimuovi",
@@ -357,7 +364,7 @@ namespace CraftMyFit.ViewModels.Exercises
 
             if(confirmed)
             {
-                SelectedEquipment.Remove(equipment);
+                _ = SelectedEquipment.Remove(equipment);
                 CheckForChanges();
             }
         }
@@ -366,11 +373,9 @@ namespace CraftMyFit.ViewModels.Exercises
 
         #region Public Methods
 
-        public void OnAppearing()
-        {
+        public void OnAppearing() =>
             // Aggiorna il check dei cambiamenti quando la pagina appare
             CheckForChanges();
-        }
 
         #endregion
     }

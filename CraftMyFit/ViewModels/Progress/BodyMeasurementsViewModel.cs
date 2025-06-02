@@ -17,7 +17,7 @@ namespace CraftMyFit.ViewModels.Progress
 
         private ObservableCollection<BodyMeasurement> _measurements = [];
         private BodyMeasurement? _latestMeasurement;
-        private BodyMeasurement _newMeasurement = new();
+        private BodyMeasurement? _newMeasurement;
         private bool _isAddingMeasurement;
         private DateTime _selectedDate = DateTime.Today;
         private string _weightUnit = "kg";
@@ -44,7 +44,7 @@ namespace CraftMyFit.ViewModels.Progress
 
             // Inizializza i comandi
             LoadMeasurementsCommand = new Command(async () => await LoadMeasurements());
-            AddMeasurementCommand = new Command(() => AddMeasurement());
+            AddMeasurementCommand = new Command(AddMeasurement);
             SaveMeasurementCommand = new Command(async () => await SaveMeasurement());
             CancelAddMeasurementCommand = new Command(CancelAddMeasurement);
             DeleteMeasurementCommand = new Command<BodyMeasurement>(async (measurement) => await DeleteMeasurement(measurement));
@@ -72,7 +72,7 @@ namespace CraftMyFit.ViewModels.Progress
 
         public BodyMeasurement NewMeasurement
         {
-            get => _newMeasurement;
+            get => _newMeasurement ?? InitializeAndReturnNewMeasurement();
             set => SetProperty(ref _newMeasurement, value);
         }
 
@@ -157,16 +157,16 @@ namespace CraftMyFit.ViewModels.Progress
         #endregion
 
         #region Private Methods
-
         private void InitializeNewMeasurement()
         {
-            var currentUserId = _preferenceService.GetInt("current_user_id", 1);
+            int currentUserId = _preferenceService.GetInt("current_user_id", 1);
             NewMeasurement = new BodyMeasurement
             {
                 Date = DateTime.Now,
                 UserId = currentUserId,
                 User = new Models.User { Id = currentUserId, Name = "User" }, // Placeholder
-                Notes = string.Empty
+                Notes = string.Empty, // Inizializza Notes come stringa vuota
+                Weight = 0 // Aggiungi inizializzazione del peso
             };
         }
 
@@ -187,10 +187,10 @@ namespace CraftMyFit.ViewModels.Progress
             {
                 IsBusy = true;
 
-                var currentUserId = _preferenceService.GetInt("current_user_id", 1);
-                var measurements = await _bodyMeasurementRepository.GetByUserIdAsync(currentUserId);
+                int currentUserId = _preferenceService.GetInt("current_user_id", 1);
+                List<BodyMeasurement> measurements = await _bodyMeasurementRepository.GetByUserIdAsync(currentUserId);
 
-                Measurements = new ObservableCollection<BodyMeasurement>(measurements);
+                Measurements = [.. measurements];
                 LatestMeasurement = measurements.FirstOrDefault();
             }
             catch(Exception ex)
@@ -227,12 +227,12 @@ namespace CraftMyFit.ViewModels.Progress
                 }
 
                 // Controlla se esiste già una misurazione per questa data
-                var currentUserId = _preferenceService.GetInt("current_user_id", 1);
-                var existingMeasurement = await _bodyMeasurementRepository.GetByUserIdAndDateAsync(currentUserId, SelectedDate);
+                int currentUserId = _preferenceService.GetInt("current_user_id", 1);
+                BodyMeasurement? existingMeasurement = await _bodyMeasurementRepository.GetByUserIdAndDateAsync(currentUserId, SelectedDate);
 
                 if(existingMeasurement != null)
                 {
-                    var overwrite = await _dialogService.ShowConfirmAsync(
+                    bool overwrite = await _dialogService.ShowConfirmAsync(
                         "Misurazione Esistente",
                         "Esiste già una misurazione per questa data. Vuoi sovrascriverla?",
                         "Sovrascrivi",
@@ -264,7 +264,7 @@ namespace CraftMyFit.ViewModels.Progress
                 {
                     // Crea una nuova misurazione
                     NewMeasurement.Date = SelectedDate;
-                    await _bodyMeasurementRepository.AddAsync(NewMeasurement);
+                    _ = await _bodyMeasurementRepository.AddAsync(NewMeasurement);
                 }
 
                 IsAddingMeasurement = false;
@@ -292,7 +292,7 @@ namespace CraftMyFit.ViewModels.Progress
 
             try
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Elimina Misurazione",
                     $"Sei sicuro di voler eliminare la misurazione del {measurement.Date:dd/MM/yyyy}?",
                     "Elimina",
@@ -350,6 +350,11 @@ namespace CraftMyFit.ViewModels.Progress
             // Ricarica le preferenze quando la pagina appare
             LoadPreferences();
 
+        private BodyMeasurement InitializeAndReturnNewMeasurement()
+        {
+            InitializeNewMeasurement();
+            return _newMeasurement!;
+        }
         #endregion
     }
 }

@@ -201,9 +201,8 @@ namespace CraftMyFit.ViewModels.Workout
                         day.IsSelected = workoutDays.Contains(day.Day);
                     }
 
-                    // Inizializza i workout days
-                    WorkoutDays = new ObservableCollection<WorkoutDay>(
-                        fullPlan.WorkoutDays?.OrderBy(wd => wd.OrderIndex) ?? new List<WorkoutDay>());
+                    // Inizializza i workout days - correzione dell'operatore ??
+                    WorkoutDays = fullPlan.WorkoutDays != null ? [.. fullPlan.WorkoutDays.OrderBy(wd => wd.OrderIndex)] : [];
 
                     Title = $"Modifica: {fullPlan.Title}";
                     HasChanges = false;
@@ -229,7 +228,7 @@ namespace CraftMyFit.ViewModels.Workout
                 }
                 else
                 {
-                    SelectedDays.Remove(dayItem.Day);
+                    _ = SelectedDays.Remove(dayItem.Day);
                     RemoveWorkoutDayForDay(dayItem.Day);
                 }
 
@@ -252,7 +251,9 @@ namespace CraftMyFit.ViewModels.Workout
                 DayOfWeek = day,
                 Title = GetDefaultWorkoutDayTitle(day),
                 OrderIndex = (int)day,
-                Exercises = []
+                Exercises = [],
+                WorkoutPlanId = WorkoutPlan?.Id ?? 0,
+                WorkoutPlan = WorkoutPlan!
             };
 
             WorkoutDays.Add(workoutDay);
@@ -341,7 +342,7 @@ namespace CraftMyFit.ViewModels.Workout
         {
             if(HasChanges)
             {
-                var confirmed = await _dialogService.ShowConfirmAsync(
+                bool confirmed = await _dialogService.ShowConfirmAsync(
                     "Annulla Modifiche",
                     "Sei sicuro di voler annullare? Le modifiche andranno perse.",
                     "Annulla Modifiche",
@@ -366,16 +367,16 @@ namespace CraftMyFit.ViewModels.Workout
                 return;
             }
 
-            object[] dayNames = availableDays.Select(d => d.DisplayName).ToArray();
-            var selectedDayName = await _dialogService.ShowActionSheetAsync(
+            string[] dayNames = availableDays.Select(d => d.DisplayName).ToArray();
+            string? selectedDayName = await _dialogService.ShowActionSheetAsync(
                 "Seleziona Giorno",
                 "Annulla",
                 null,
                 dayNames);
 
-            if(selectedDayName is not null and not (object)"Annulla")
+            if(selectedDayName is not null and not "Annulla")
             {
-                var dayItem = availableDays.FirstOrDefault(d => d.DisplayName == selectedDayName);
+                DaySelectionItem? dayItem = availableDays.FirstOrDefault(d => d.DisplayName == selectedDayName);
                 if(dayItem != null)
                 {
                     dayItem.IsSelected = true;
@@ -395,7 +396,7 @@ namespace CraftMyFit.ViewModels.Workout
                 $"Questo giorno contiene {exerciseCount} esercizio/i. Vuoi rimuoverlo comunque?" :
                 $"Sei sicuro di voler rimuovere {workoutDay.Title}?";
 
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Rimuovi Giorno",
                 message,
                 "Rimuovi",
@@ -403,7 +404,7 @@ namespace CraftMyFit.ViewModels.Workout
 
             if(confirmed)
             {
-                var dayItem = AvailableDays.FirstOrDefault(d => d.Day == workoutDay.DayOfWeek);
+                DaySelectionItem? dayItem = AvailableDays.FirstOrDefault(d => d.Day == workoutDay.DayOfWeek);
                 if(dayItem != null)
                 {
                     dayItem.IsSelected = false;
@@ -418,7 +419,7 @@ namespace CraftMyFit.ViewModels.Workout
                 return;
             }
 
-            var newTitle = await _dialogService.ShowPromptAsync(
+            string? newTitle = await _dialogService.ShowPromptAsync(
                 "Modifica Titolo",
                 "Inserisci il nuovo titolo per questo giorno:",
                 workoutDay.Title);
@@ -443,7 +444,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task RemoveExercise(WorkoutDay day, WorkoutExercise exercise)
         {
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Rimuovi Esercizio",
                 $"Sei sicuro di voler rimuovere {exercise.Exercise?.Name} da {day.Title}?",
                 "Rimuovi",
@@ -463,7 +464,7 @@ namespace CraftMyFit.ViewModels.Workout
                 return;
             }
 
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Ripristina Modifiche",
                 "Sei sicuro di voler annullare tutte le modifiche e ripristinare i valori originali?",
                 "Ripristina",
@@ -471,8 +472,8 @@ namespace CraftMyFit.ViewModels.Workout
 
             if(confirmed)
             {
-                // Ripristina i valori originali
-                await OnWorkoutPlanChanged();
+                // Ripristina i valori originali - rimuovi await
+                OnWorkoutPlanChanged();
             }
         }
 

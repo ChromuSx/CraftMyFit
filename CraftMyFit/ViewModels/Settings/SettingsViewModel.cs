@@ -174,7 +174,7 @@ namespace CraftMyFit.ViewModels.Settings
 
         private async Task ResetSettings()
         {
-            var confirmed = await _dialogService.ShowConfirmAsync(
+            bool confirmed = await _dialogService.ShowConfirmAsync(
                 "Reset Impostazioni",
                 "Sei sicuro di voler ripristinare tutte le impostazioni ai valori predefiniti?",
                 "Reset",
@@ -227,13 +227,13 @@ namespace CraftMyFit.ViewModels.Settings
         {
             string[] options = new string[] { "Email", "GitHub", "Sito Web" };
 
-            var choice = await _dialogService.ShowActionSheetAsync(
+            string? choice = await _dialogService.ShowActionSheetAsync(
                 "Contatta il Supporto",
                 "Annulla",
                 null,
                 options);
 
-            if(choice is not null and not (object)"Annulla")
+            if(choice is not null and not "Annulla")
             {
                 switch(choice)
                 {
