@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CraftMyFit.Models
 {
-    public class User
+    public partial class User
     {
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }

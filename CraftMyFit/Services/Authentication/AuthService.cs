@@ -1,4 +1,5 @@
 ﻿// AuthService.cs - Servizio di autenticazione
+using CraftMyFit.Models;
 using CraftMyFit.Services.Interfaces;
 using System.Text.Json;
 
@@ -360,14 +361,5 @@ namespace CraftMyFit.Services.Authentication
     {
         public bool IsAuthenticated { get; set; }
         public User? User { get; set; }
-    }
-
-    // Estensione del modello User per l'autenticazione
-    public partial class User
-    {
-        public string Email { get; set; } = string.Empty;
-        public bool IsEmailVerified { get; set; }
-        public DateTime? LastLoginDate { get; set; }
-        public string? RefreshToken { get; set; }
     }
 }
