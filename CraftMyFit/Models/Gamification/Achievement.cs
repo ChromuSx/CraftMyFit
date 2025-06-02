@@ -22,7 +22,7 @@ namespace CraftMyFit.Models.Gamification
 
         // Relazioni
         public int UserId { get; set; }
-        public required User User { get; set; }
+        public User? User { get; set; }  // Rimosso 'required' - Entity Framework gestirà la relazione
 
         public DateTime? UnlockedDate { get; set; }  // null se non sbloccato
 

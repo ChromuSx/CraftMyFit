@@ -55,8 +55,7 @@ namespace CraftMyFit.Services
                 await Share.Default.RequestAsync(new ShareFileRequest
                 {
                     Title = title,
-                    File = new ShareFile(imagePath),
-                    Text = text
+                    File = new ShareFile(imagePath)
                 });
                 return true;
             }
@@ -71,7 +70,7 @@ namespace CraftMyFit.Services
         {
             try
             {
-                var files = imagePaths
+                List<ShareFile> files = imagePaths
                     .Where(File.Exists)
                     .Select(path => new ShareFile(path))
                     .ToList();
@@ -84,8 +83,7 @@ namespace CraftMyFit.Services
                 await Share.Default.RequestAsync(new ShareMultipleFilesRequest
                 {
                     Title = title,
-                    Files = files,
-                    Text = text
+                    Files = files
                 });
                 return true;
             }
@@ -108,8 +106,7 @@ namespace CraftMyFit.Services
                 await Share.Default.RequestAsync(new ShareFileRequest
                 {
                     Title = title,
-                    File = new ShareFile(filePath),
-                    Text = text
+                    File = new ShareFile(filePath)
                 });
                 return true;
             }
@@ -125,7 +122,7 @@ namespace CraftMyFit.Services
             try
             {
                 int userIdInt = int.Parse(userId);
-                var progressText = await GenerateProgressTextAsync(userIdInt, type);
+                string progressText = await GenerateProgressTextAsync(userIdInt, type);
 
                 if(string.IsNullOrEmpty(progressText))
                 {
@@ -151,14 +148,14 @@ namespace CraftMyFit.Services
             try
             {
                 int planId = int.Parse(workoutPlanId);
-                var workoutPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(planId);
+                Models.Workout.WorkoutPlan workoutPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(planId);
 
                 if(workoutPlan == null)
                 {
                     return false;
                 }
 
-                var shareText = GenerateWorkoutPlanShareText(workoutPlan);
+                string shareText = GenerateWorkoutPlanShareText(workoutPlan);
 
                 await Share.Default.RequestAsync(new ShareTextRequest
                 {
@@ -179,14 +176,14 @@ namespace CraftMyFit.Services
             try
             {
                 int achId = int.Parse(achievementId);
-                var achievement = await _achievementRepository.GetByIdAsync(achId);
+                Models.Gamification.Achievement achievement = await _achievementRepository.GetByIdAsync(achId);
 
                 if(achievement == null || !achievement.UnlockedDate.HasValue)
                 {
                     return false;
                 }
 
-                var shareText = $"🏆 Achievement sbloccato su CraftMyFit!\n\n" +
+                string shareText = $"🏆 Achievement sbloccato su CraftMyFit!\n\n" +
                               $"✨ {achievement.Title}\n" +
                               $"📝 {achievement.Description}\n" +
                               $"🎯 {achievement.PointsAwarded} punti guadagnati\n\n" +
@@ -210,9 +207,9 @@ namespace CraftMyFit.Services
         {
             try
             {
-                var shareText = "📊 Le mie statistiche CraftMyFit:\n\n";
+                string shareText = "📊 Le mie statistiche CraftMyFit:\n\n";
 
-                foreach(var stat in stats)
+                foreach(KeyValuePair<string, object> stat in stats)
                 {
                     shareText += $"• {stat.Key}: {stat.Value}\n";
                 }
@@ -239,14 +236,9 @@ namespace CraftMyFit.Services
             {
                 // Crea un'immagine con le statistiche dell'utente
                 int userIdInt = int.Parse(userId);
-                var imagePath = await CreateStatsImageAsync(userIdInt);
+                string? imagePath = await CreateStatsImageAsync(userIdInt);
 
-                if(string.IsNullOrEmpty(imagePath))
-                {
-                    return false;
-                }
-
-                return await ShareImageAsync("Le mie statistiche CraftMyFit 📊", imagePath,
+                return !string.IsNullOrEmpty(imagePath) && await ShareImageAsync("Le mie statistiche CraftMyFit 📊", imagePath,
                     "Guarda i miei progressi fitness! 💪 #CraftMyFit #Fitness");
             }
             catch(Exception ex)
@@ -275,7 +267,7 @@ namespace CraftMyFit.Services
         {
             try
             {
-                var stats = await _statsService.CalculateUserStatsAsync(userId);
+                UserStats stats = await _statsService.CalculateUserStatsAsync(userId);
 
                 return type switch
                 {
@@ -311,48 +303,42 @@ namespace CraftMyFit.Services
                    $"#CraftMyFit #WeightLoss #Fitness #Motivazione";
         }
 
-        private string GenerateMuscleGainText(UserStats stats)
-        {
-            return $"💪 Sto costruendo il mio fisico con CraftMyFit!\n\n" +
+        private string GenerateMuscleGainText(UserStats stats) => $"💪 Sto costruendo il mio fisico con CraftMyFit!\n\n" +
                    $"📈 I miei progressi:\n" +
                    $"• Allenamenti completati: {stats.CompletedWorkouts}\n" +
                    $"• Streak più lunga: {stats.LongestStreak} giorni\n" +
                    $"• Achievement sbloccati: {stats.UnlockedAchievements}/{stats.TotalAchievements}\n\n" +
                    $"🏋️‍♂️ Un giorno alla volta, verso i miei obiettivi!\n" +
                    $"#CraftMyFit #MuscleGain #Fitness #Strength";
-        }
 
-        private string GenerateWorkoutStreakText(UserStats stats)
-        {
-            return $"🔥 Streak di {stats.CurrentStreak} giorni su CraftMyFit!\n\n" +
+        private string GenerateWorkoutStreakText(UserStats stats) => $"🔥 Streak di {stats.CurrentStreak} giorni su CraftMyFit!\n\n" +
                    $"💪 La mia dedizione:\n" +
                    $"• Streak corrente: {stats.CurrentStreak} giorni\n" +
                    $"• Record personale: {stats.LongestStreak} giorni\n" +
                    $"• Totale allenamenti: {stats.CompletedWorkouts}\n\n" +
                    $"🎯 La costanza è la chiave del successo!\n" +
                    $"#CraftMyFit #WorkoutStreak #Consistency #Fitness";
-        }
 
         private async Task<string> GeneratePhotoComparisonTextAsync(int userId)
         {
-            var photos = await _progressPhotoRepository.GetByUserIdAsync(userId);
-            var photoCount = photos.Count;
+            List<Models.Progress.ProgressPhoto> photos = await _progressPhotoRepository.GetByUserIdAsync(userId);
+            int photoCount = photos.Count;
 
             if(photoCount < 2)
             {
                 return string.Empty;
             }
 
-            var firstPhoto = photos.LastOrDefault();
-            var latestPhoto = photos.FirstOrDefault();
+            Models.Progress.ProgressPhoto? firstPhoto = photos.LastOrDefault();
+            Models.Progress.ProgressPhoto? latestPhoto = photos.FirstOrDefault();
 
             if(firstPhoto == null || latestPhoto == null)
             {
                 return string.Empty;
             }
 
-            var timeSpan = latestPhoto.Date - firstPhoto.Date;
-            var daysApart = (int)timeSpan.TotalDays;
+            TimeSpan timeSpan = latestPhoto.Date - firstPhoto.Date;
+            int daysApart = (int)timeSpan.TotalDays;
 
             return $"📸 La mia trasformazione in {daysApart} giorni!\n\n" +
                    $"✨ Risultati visibili:\n" +
@@ -363,20 +349,15 @@ namespace CraftMyFit.Services
                    $"#CraftMyFit #Transformation #Progress #Fitness";
         }
 
-        private string GenerateMonthlyProgressText(UserStats stats)
-        {
-            return $"📅 I miei progressi di questo mese con CraftMyFit!\n\n" +
+        private string GenerateMonthlyProgressText(UserStats stats) => $"📅 I miei progressi di questo mese con CraftMyFit!\n\n" +
                    $"🎯 Risultati mensili:\n" +
                    $"• Achievement: {stats.UnlockedAchievements} sbloccati\n" +
                    $"• Punti totali: {stats.TotalPoints}\n" +
                    $"• Streak corrente: {stats.CurrentStreak} giorni\n\n" +
                    $"📈 Ogni giorno è un passo avanti!\n" +
                    $"#CraftMyFit #MonthlyProgress #Fitness #Goals";
-        }
 
-        private string GenerateYearlyProgressText(UserStats stats)
-        {
-            return $"🎊 I miei risultati dell'anno con CraftMyFit!\n\n" +
+        private string GenerateYearlyProgressText(UserStats stats) => $"🎊 I miei risultati dell'anno con CraftMyFit!\n\n" +
                    $"🏆 Bilancio annuale:\n" +
                    $"• Allenamenti totali: {stats.CompletedWorkouts}\n" +
                    $"• Achievement: {stats.UnlockedAchievements}/{stats.TotalAchievements}\n" +
@@ -384,11 +365,8 @@ namespace CraftMyFit.Services
                    $"• Progresso peso: {stats.WeightChangeText}\n\n" +
                    $"🌟 Un anno di crescita e dedizione!\n" +
                    $"#CraftMyFit #YearlyProgress #Fitness #Journey";
-        }
 
-        private string GenerateGeneralProgressText(UserStats stats)
-        {
-            return $"💪 I miei progressi fitness con CraftMyFit!\n\n" +
+        private string GenerateGeneralProgressText(UserStats stats) => $"💪 I miei progressi fitness con CraftMyFit!\n\n" +
                    $"📊 Le mie statistiche:\n" +
                    $"• Allenamenti completati: {stats.CompletedWorkouts}\n" +
                    $"• Achievement sbloccati: {stats.UnlockedAchievements}\n" +
@@ -396,11 +374,10 @@ namespace CraftMyFit.Services
                    $"• Punti totali: {stats.TotalPoints}\n\n" +
                    $"🎯 Il viaggio continua!\n" +
                    $"#CraftMyFit #Fitness #Progress #Motivation";
-        }
 
         private string GenerateWorkoutPlanShareText(Models.Workout.WorkoutPlan workoutPlan)
         {
-            var shareText = $"🏋️‍♂️ Condivido il mio piano di allenamento!\n\n" +
+            string shareText = $"🏋️‍♂️ Condivido il mio piano di allenamento!\n\n" +
                           $"📋 {workoutPlan.Title}\n";
 
             if(!string.IsNullOrEmpty(workoutPlan.Description))

@@ -123,10 +123,10 @@
         /// </summary>
         public static T? MostCommon<T>(this IEnumerable<T> source) => source == null
                 ? throw new ArgumentNullException(nameof(source))
-                : (source
+                : source
                 .GroupBy(x => x)
                 .OrderByDescending(g => g.Count())
-                .FirstOrDefault()?.Key);
+                .FirstOrDefault().Key;
 
         /// <summary>
         /// Rimuove duplicati mantenendo l'ordine
@@ -143,7 +143,7 @@
                 throw new ArgumentNullException(nameof(keySelector));
             }
 
-            HashSet<TKey> seenKeys = new();
+            HashSet<TKey> seenKeys = [];
             foreach(T? element in source)
             {
                 if(seenKeys.Add(keySelector(element)))
