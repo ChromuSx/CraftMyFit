@@ -11,7 +11,7 @@ namespace CraftMyFit.Models
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required, System.ComponentModel.DataAnnotations.MaxLength(50)]
         public required string Name { get; set; }
 
         public string? ProfileImagePath { get; set; }

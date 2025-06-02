@@ -10,7 +10,7 @@ namespace CraftMyFit.Models.Workout
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
 
-        [Required, MaxLength(100)]
+        [Required, System.ComponentModel.DataAnnotations.MaxLength(100)]
         public required string Name { get; set; }
 
         public required string Description { get; set; }
