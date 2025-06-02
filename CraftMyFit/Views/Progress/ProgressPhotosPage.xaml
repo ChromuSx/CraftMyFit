@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Progress.ProgressPhotosPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:DateTimeToStringConverter x:Key="DateTimeConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Aggiungi"
+                     IconImageSource="camera.png"
+                     Command="{Binding TakePhotoCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header con ricerca e filtri -->
+        <Frame Grid.Row="0" 
+               BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2d2d30}" 
+               HasShadow="False" 
+               CornerRadius="0"
+               Padding="16,10">
+            <StackLayout Spacing="12">
+
+                <!-- Statistiche rapide -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+
+                    <Frame Grid.Column="0" 
+                           BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="8">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding PhotoCount}" 
+                                   FontSize="18" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=White}" />
+                            <Label Text="Foto totali" 
+                                   FontSize="10"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+
+                    <Button Grid.Column="1"
+                            Text="📷 Scatta"
+                            Command="{Binding TakePhotoCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            FontSize="12"
+                            Padding="0,8" />
+
+                    <Button Grid.Column="2"
+                            Text="🖼️ Galleria"
+                            Command="{Binding PickPhotoCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            FontSize="12"
+                            Padding="0,8" />
+                </Grid>
+
+                <!-- Barra di ricerca -->
+                <SearchBar Placeholder="Cerca per descrizione..."
+                           Text="{Binding SearchDescription}"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#3c3c3c}"
+                           TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                           PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+
+                <!-- Filtri -->
+                <StackLayout Orientation="Horizontal" 
+                             Spacing="10"
+                             HorizontalOptions="FillAndExpand">
+
+                    <!-- Data picker -->
+                    <DatePicker Date="{Binding SelectedDate}"
+                                BackgroundColor="{AppThemeBinding Light=White, Dark=#3c3c3c}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                HorizontalOptions="FillAndExpand" />
+
+                    <!-- Toggle raggruppamento -->
+                    <StackLayout Orientation="Horizontal" 
+                                 Spacing="5"
+                                 VerticalOptions="Center">
+                        <Switch IsToggled="{Binding IsGroupedByMonth}"
+                                OnColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+                        <Label Text="Per mese" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               VerticalOptions="Center" />
+                    </StackLayout>
+                </StackLayout>
+            </StackLayout>
+        </Frame>
+
+        <!-- Lista foto di progresso -->
+        <RefreshView Grid.Row="1" 
+                     IsRefreshing="{Binding IsBusy}" 
+                     Command="{Binding RefreshCommand}">
+
+            <CollectionView ItemsSource="{Binding FilteredPhotos}"
+                            SelectionMode="None"
+                            BackgroundColor="Transparent">
+
+                <CollectionView.EmptyView>
+                    <StackLayout Padding="40"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                        <Label Text="📸" 
+                               FontSize="48"
+                               HorizontalOptions="Center"
+                               Margin="0,0,0,10" />
+                        <Label Text="Nessuna foto di progresso" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Documenta il tuo percorso fitness" 
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                               Margin="0,5,0,20" />
+
+                        <StackLayout Orientation="Horizontal" Spacing="10">
+                            <Button Text="Scatta Foto" 
+                                    Command="{Binding TakePhotoCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    Padding="15,10" />
+                            <Button Text="Dalla Galleria" 
+                                    Command="{Binding PickPhotoCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    Padding="15,10" />
+                        </StackLayout>
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemsLayout>
+                    <GridItemsLayout Orientation="Vertical" 
+                                     Span="2" 
+                                     HorizontalItemSpacing="8"
+                                     VerticalItemSpacing="8" />
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="8">
+                            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                                   HasShadow="True"
+                                   CornerRadius="12"
+                                   Padding="8">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.ViewPhotoCommand}"
+                                                          CommandParameter="{Binding}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid RowDefinitions="*,Auto,Auto" RowSpacing="8">
+
+                                    <!-- Foto placeholder -->
+                                    <Frame Grid.Row="0"
+                                           BackgroundColor="{AppThemeBinding Light=#f0f0f0, Dark=#404040}"
+                                           HasShadow="False"
+                                           CornerRadius="8"
+                                           Padding="0"
+                                           HeightRequest="150">
+
+                                        <!-- TODO: Sostituire con Image quando disponibili le foto -->
+                                        <Label Text="📷" 
+                                               FontSize="40"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center"
+                                               TextColor="{AppThemeBinding Light=#ccc, Dark=#666}" />
+                                    </Frame>
+
+                                    <!-- Data -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Date, Converter={StaticResource DateTimeConverter}, ConverterParameter=friendly}" 
+                                           FontSize="12"
+                                           FontAttributes="Bold"
+                                           TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                           HorizontalOptions="Center" />
+
+                                    <!-- Descrizione -->
+                                    <Label Grid.Row="2"
+                                           Text="{Binding Description}" 
+                                           FontSize="11"
+                                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation"
+                                           HorizontalOptions="Center"
+                                           HorizontalTextAlignment="Center" />
+
+                                    <!-- Menu opzioni (overlay) -->
+                                    <Button Grid.Row="0"
+                                            Text="⋮"
+                                            FontSize="16"
+                                            BackgroundColor="{AppThemeBinding Light=#ffffff80, Dark=#2d2d3080}"
+                                            TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                                            CornerRadius="12"
+                                            WidthRequest="30"
+                                            HeightRequest="30"
+                                            HorizontalOptions="End"
+                                            VerticalOptions="Start"
+                                            Margin="4">
+                                        <Button.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeletePhotoCommand}"
+                                                                  CommandParameter="{Binding}" />
+                                        </Button.GestureRecognizers>
+                                    </Button>
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1"
+                           IsVisible="{Binding IsBusy}"
+                           IsRunning="{Binding IsBusy}"
+                           Color="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
+
+</ContentPage>

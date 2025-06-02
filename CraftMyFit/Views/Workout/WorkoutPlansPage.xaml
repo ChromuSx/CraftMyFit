@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Workout.WorkoutPlansPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:DateTimeToStringConverter x:Key="DateTimeConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Nuovo"
+                     IconImageSource="add.png"
+                     Command="{Binding CreateWorkoutPlanCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header con ricerca e filtri -->
+        <Frame Grid.Row="0" 
+               BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2d2d30}" 
+               HasShadow="False" 
+               CornerRadius="0"
+               Padding="16,10">
+            <StackLayout Spacing="12">
+
+                <!-- Barra di ricerca -->
+                <SearchBar Placeholder="Cerca piani di allenamento..."
+                           Text="{Binding SearchText}"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#3c3c3c}"
+                           TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                           PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+
+                <!-- Filtri -->
+                <StackLayout Orientation="Horizontal" 
+                             Spacing="10"
+                             HorizontalOptions="FillAndExpand">
+
+                    <!-- Toggle solo piani attivi -->
+                    <StackLayout Orientation="Horizontal" 
+                                 Spacing="5"
+                                 VerticalOptions="Center">
+                        <Switch IsToggled="{Binding ShowActiveOnly}"
+                                OnColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+                        <Label Text="Solo attivi" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               VerticalOptions="Center" />
+                    </StackLayout>
+                </StackLayout>
+            </StackLayout>
+        </Frame>
+
+        <!-- Lista piani di allenamento -->
+        <RefreshView Grid.Row="1" 
+                     IsRefreshing="{Binding IsBusy}" 
+                     Command="{Binding RefreshCommand}">
+
+            <CollectionView ItemsSource="{Binding FilteredWorkoutPlans}"
+                            SelectionMode="None"
+                            BackgroundColor="Transparent">
+
+                <CollectionView.EmptyView>
+                    <StackLayout Padding="40"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                        <Label Text="🏋️" 
+                               FontSize="48"
+                               HorizontalOptions="Center"
+                               Margin="0,0,0,10" />
+                        <Label Text="Nessun piano di allenamento" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Crea il tuo primo piano per iniziare" 
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                               Margin="0,5,0,20" />
+                        <Button Text="Crea Piano" 
+                                Command="{Binding CreateWorkoutPlanCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                Padding="20,10" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="16,8">
+                            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                                   HasShadow="True"
+                                   CornerRadius="12"
+                                   Padding="16">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectWorkoutPlanCommand}"
+                                                          CommandParameter="{Binding}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" 
+                                      RowSpacing="8">
+
+                                    <!-- Header con titolo e menu -->
+                                    <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0"
+                                               Text="{Binding Title}" 
+                                               FontSize="18"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                                               VerticalOptions="Center" />
+
+                                        <!-- Menu opzioni -->
+                                        <Button Grid.Column="1"
+                                                Text="⋮"
+                                                FontSize="18"
+                                                BackgroundColor="Transparent"
+                                                TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                                Padding="8"
+                                                WidthRequest="40"
+                                                HeightRequest="40">
+                                            <Button.Triggers>
+                                                <EventTrigger Event="Clicked">
+                                                    <!-- TODO: Implementare menu contestuale -->
+                                                </EventTrigger>
+                                            </Button.Triggers>
+                                        </Button>
+                                    </Grid>
+
+                                    <!-- Descrizione -->
+                                    <Label Grid.Row="1"
+                                           Text="{Binding Description}" 
+                                           FontSize="14"
+                                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                           MaxLines="2"
+                                           LineBreakMode="TailTruncation"
+                                           IsVisible="{Binding Description, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                                    <!-- Informazioni giorni -->
+                                    <StackLayout Grid.Row="2" 
+                                                 Orientation="Horizontal" 
+                                                 Spacing="15">
+                                        <StackLayout Orientation="Horizontal" Spacing="5">
+                                            <Label Text="📅" FontSize="14" VerticalOptions="Center" />
+                                            <Label Text="{Binding WorkoutDays.Count, StringFormat='{0} giorni'}" 
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                                   FontAttributes="Bold"
+                                                   VerticalOptions="Center" />
+                                        </StackLayout>
+
+                                        <StackLayout Orientation="Horizontal" Spacing="5">
+                                            <Label Text="🗓️" FontSize="14" VerticalOptions="Center" />
+                                            <Label Text="{Binding ModifiedDate, Converter={StaticResource DateTimeConverter}, ConverterParameter=friendly}" 
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                                   VerticalOptions="Center" />
+                                        </StackLayout>
+                                    </StackLayout>
+
+                                    <!-- Azioni -->
+                                    <Grid Grid.Row="3" 
+                                          ColumnDefinitions="*,*,Auto" 
+                                          ColumnSpacing="10"
+                                          Margin="0,8,0,0">
+
+                                        <Button Grid.Column="0"
+                                                Text="Inizia" 
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.StartWorkoutCommand}"
+                                                CommandParameter="{Binding}"
+                                                BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                                TextColor="White"
+                                                CornerRadius="6"
+                                                FontSize="12"
+                                                Padding="0,8" />
+
+                                        <Button Grid.Column="1"
+                                                Text="Modifica" 
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditWorkoutPlanCommand}"
+                                                CommandParameter="{Binding}"
+                                                BackgroundColor="Transparent"
+                                                TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                                BorderColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                                BorderWidth="1"
+                                                CornerRadius="6"
+                                                FontSize="12"
+                                                Padding="0,8" />
+
+                                        <Button Grid.Column="2"
+                                                Text="🗑️"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteWorkoutPlanCommand}"
+                                                CommandParameter="{Binding}"
+                                                BackgroundColor="Transparent"
+                                                TextColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                                                FontSize="16"
+                                                Padding="8"
+                                                WidthRequest="40"
+                                                HeightRequest="40" />
+                                    </Grid>
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1"
+                           IsVisible="{Binding IsBusy}"
+                           IsRunning="{Binding IsBusy}"
+                           Color="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Exercises.ExerciseDetailPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding ExerciseName}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Modifica"
+                     IconImageSource="edit.png"
+                     Command="{Binding EditExerciseCommand}" />
+        <ToolbarItem Text="Condividi"
+                     IconImageSource="share.png"
+                     Command="{Binding ShareExerciseCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="0" Spacing="0">
+
+            <!-- Header con immagine/video -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#f0f0f0, Dark=#404040}"
+                   HasShadow="False"
+                   CornerRadius="0"
+                   Padding="0"
+                   HeightRequest="200">
+
+                <!-- Placeholder per immagine/video dell'esercizio -->
+                <Grid>
+                    <Label Text="🏋️" 
+                           FontSize="80"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center"
+                           TextColor="{AppThemeBinding Light=#ccc, Dark=#666}" />
+
+                    <!-- Bottone play video -->
+                    <Button Text="▶️"
+                            FontSize="40"
+                            BackgroundColor="{AppThemeBinding Light=#ffffff80, Dark=#00000080}"
+                            TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                            CornerRadius="35"
+                            WidthRequest="70"
+                            HeightRequest="70"
+                            HorizontalOptions="Center"
+                            VerticalOptions="Center"
+                            Command="{Binding ViewVideoCommand}"
+                            IsVisible="{Binding HasVideo}" />
+                </Grid>
+            </Frame>
+
+            <!-- Informazioni principali -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}" 
+                         Padding="20" 
+                         Spacing="15">
+
+                <!-- Nome e gruppo muscolare -->
+                <StackLayout Spacing="8">
+                    <Label Text="{Binding ExerciseName}" 
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                    <Frame BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                           HasShadow="False"
+                           CornerRadius="15"
+                           Padding="8,5"
+                           HorizontalOptions="Start">
+                        <Label Text="{Binding MuscleGroup}" 
+                               FontSize="12"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#1976d2, Dark=White}" />
+                    </Frame>
+                </StackLayout>
+
+                <!-- Descrizione -->
+                <StackLayout Spacing="8">
+                    <Label Text="Descrizione" 
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                    <Label Text="{Binding ExerciseDescription}" 
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                           LineHeight="1.4" />
+                </StackLayout>
+
+                <!-- Attrezzatura richiesta -->
+                <StackLayout Spacing="8" IsVisible="{Binding RequiresEquipment}">
+                    <Label Text="Attrezzatura Richiesta" 
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                    <CollectionView ItemsSource="{Binding RequiredEquipment}">
+                        <CollectionView.ItemsLayout>
+                            <LinearItemsLayout Orientation="Horizontal" ItemSpacing="8" />
+                        </CollectionView.ItemsLayout>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="{AppThemeBinding Light=#fff3e0, Dark=#e65100}"
+                                       HasShadow="False"
+                                       CornerRadius="12"
+                                       Padding="8,5">
+                                    <Label Text="{Binding}" 
+                                           FontSize="12"
+                                           TextColor="{AppThemeBinding Light=#f57c00, Dark=White}" />
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </StackLayout>
+
+                <!-- Messaggio nessuna attrezzatura -->
+                <StackLayout Spacing="8" IsVisible="{Binding RequiresEquipment, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}">
+                    <Label Text="✅ Nessuna attrezzatura richiesta" 
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                           HorizontalOptions="Center" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Azioni -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}" 
+                         Padding="20,0,20,20" 
+                         Spacing="12">
+
+                <!-- Bottone aggiungi a piano -->
+                <Button Text="➕ Aggiungi a Piano di Allenamento" 
+                        Command="{Binding AddToWorkoutCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        FontSize="16"
+                        Padding="0,12" />
+
+                <!-- Bottoni secondari -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Grid.Column="0"
+                            Text="❤️ Aggiungi ai Preferiti" 
+                            Command="{Binding ToggleFavoriteCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                            BorderColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                            BorderWidth="1"
+                            CornerRadius="8"
+                            FontSize="14"
+                            Padding="0,10" />
+
+                    <Button Grid.Column="1"
+                            Text="🎥 Guarda Video" 
+                            Command="{Binding ViewVideoCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                            BorderColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                            BorderWidth="1"
+                            CornerRadius="8"
+                            FontSize="14"
+                            Padding="0,10"
+                            IsVisible="{Binding HasVideo}" />
+                </Grid>
+            </StackLayout>
+
+            <!-- Note personali -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#404040}" 
+                         Padding="20" 
+                         Spacing="15">
+
+                <Label Text="Note Personali" 
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="False"
+                       CornerRadius="8"
+                       Padding="12">
+                    <Editor Text="{Binding Notes}" 
+                            Placeholder="Aggiungi le tue note su questo esercizio..."
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                            PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}"
+                            HeightRequest="100"
+                            FontSize="14" />
+                </Frame>
+
+                <Button Text="Salva Note" 
+                        Command="{Binding SaveNotesCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                        TextColor="White"
+                        CornerRadius="6"
+                        FontSize="14"
+                        Padding="0,8"
+                        HorizontalOptions="End" />
+            </StackLayout>
+
+            <!-- Suggerimenti -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}" 
+                         Padding="20" 
+                         Spacing="15">
+
+                <Label Text="💡 Suggerimenti" 
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                <StackLayout Spacing="10">
+                    <Label Text="• Mantieni sempre la forma corretta"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    <Label Text="• Controlla il movimento in entrambe le fasi"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    <Label Text="• Respira correttamente durante l'esecuzione"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    <Label Text="• Aumenta gradualmente il carico"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Spazio aggiuntivo -->
+            <BoxView HeightRequest="20" Color="Transparent" />
+
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>

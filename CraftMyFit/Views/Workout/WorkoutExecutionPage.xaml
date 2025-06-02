@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Workout.WorkoutExecutionPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding WorkoutTitle}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}"
+    NavigationPage.HasBackButton="False">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*,Auto">
+
+        <!-- Header con timer e progresso -->
+        <Frame Grid.Row="0" 
+               BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" 
+               HasShadow="True" 
+               CornerRadius="0,0,20,20"
+               Padding="20,10,20,15">
+            <StackLayout Spacing="10">
+
+                <!-- Timer principale -->
+                <Label Text="{Binding TotalWorkoutTimeText}" 
+                       FontSize="32"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center" />
+
+                <!-- Progresso allenamento -->
+                <ProgressBar Progress="{Binding WorkoutProgress}"
+                             BackgroundColor="White"
+                             ProgressColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                             HeightRequest="8" />
+
+                <!-- Info progresso -->
+                <Grid ColumnDefinitions="*,*,*">
+                    <Label Grid.Column="0"
+                           Text="{Binding ProgressText}" 
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Start" />
+
+                    <Label Grid.Column="1"
+                           Text="{Binding SetProgressText}" 
+                           FontSize="12"
+                           TextColor="White"
+                           HorizontalOptions="Center" />
+
+                    <StackLayout Grid.Column="2" Orientation="Horizontal" HorizontalOptions="End">
+                        <Button Text="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}"
+                                Command="{Binding IsPaused, Converter={StaticResource BoolToVisibilityConverter}}"
+                                BackgroundColor="Transparent"
+                                TextColor="White"
+                                FontSize="16"
+                                Padding="8,4"
+                                CornerRadius="4">
+                            <Button.Triggers>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsPaused}" Value="True">
+                                    <Setter Property="Text" Value="▶️" />
+                                    <Setter Property="Command" Value="{Binding ResumeWorkoutCommand}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Button" Binding="{Binding IsPaused}" Value="False">
+                                    <Setter Property="Text" Value="⏸️" />
+                                    <Setter Property="Command" Value="{Binding PauseWorkoutCommand}" />
+                                </DataTrigger>
+                            </Button.Triggers>
+                        </Button>
+                    </StackLayout>
+                </Grid>
+            </StackLayout>
+        </Frame>
+
+        <!-- Contenuto principale -->
+        <ScrollView Grid.Row="1" Padding="20">
+            <StackLayout Spacing="20">
+
+                <!-- Esercizio corrente -->
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="True"
+                       CornerRadius="12"
+                       Padding="20">
+                    <StackLayout Spacing="15">
+
+                        <!-- Nome esercizio -->
+                        <Label Text="{Binding CurrentExerciseName}" 
+                               FontSize="24"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               HorizontalOptions="Center" />
+
+                        <!-- Timer esercizio -->
+                        <Label Text="{Binding ExerciseTimeText}" 
+                               FontSize="18"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                               HorizontalOptions="Center" />
+
+                        <!-- Parametri esercizio -->
+                        <Grid ColumnDefinitions="*,*,*" ColumnSpacing="15" RowSpacing="10">
+
+                            <!-- Serie -->
+                            <StackLayout Grid.Column="0" HorizontalOptions="Center">
+                                <Label Text="Serie" 
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                       HorizontalOptions="Center" />
+                                <Label Text="{Binding CurrentSet}" 
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                       HorizontalOptions="Center" />
+                                <Label Text="{Binding CurrentExercise.Sets, StringFormat='di {0}'}" 
+                                       FontSize="10"
+                                       TextColor="{AppThemeBinding Light=#999, Dark=#999}"
+                                       HorizontalOptions="Center" />
+                            </StackLayout>
+
+                            <!-- Ripetizioni -->
+                            <StackLayout Grid.Column="1" HorizontalOptions="Center">
+                                <Label Text="Ripetizioni" 
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                       HorizontalOptions="Center" />
+                                <Entry Text="{Binding CompletedReps}" 
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                                       HorizontalOptions="Center"
+                                       WidthRequest="60"
+                                       HorizontalTextAlignment="Center"
+                                       Keyboard="Numeric"
+                                       BackgroundColor="Transparent" />
+                            </StackLayout>
+
+                            <!-- Peso -->
+                            <StackLayout Grid.Column="2" HorizontalOptions="Center">
+                                <Label Text="Peso (kg)" 
+                                       FontSize="12"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                       HorizontalOptions="Center" />
+                                <Entry Text="{Binding UsedWeight}" 
+                                       FontSize="20"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                                       HorizontalOptions="Center"
+                                       WidthRequest="80"
+                                       HorizontalTextAlignment="Center"
+                                       Keyboard="Numeric"
+                                       BackgroundColor="Transparent" />
+                            </StackLayout>
+                        </Grid>
+
+                        <!-- Bottone completa serie -->
+                        <Button Text="✅ Completa Serie" 
+                                Command="{Binding CompleteSetCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="18"
+                                FontAttributes="Bold"
+                                Padding="0,15"
+                                IsEnabled="{Binding CanCompleteSet}" />
+
+                        <!-- Navigazione esercizi -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <Button Grid.Column="0"
+                                    Text="⬅️ Precedente" 
+                                    Command="{Binding PreviousExerciseCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                    BorderColor="{AppThemeBinding Light=#ddd, Dark=#666}"
+                                    BorderWidth="1"
+                                    CornerRadius="6"
+                                    FontSize="14"
+                                    Padding="0,10"
+                                    IsEnabled="{Binding CanGoToPreviousExercise}" />
+
+                            <Button Grid.Column="1"
+                                    Text="Successivo ➡️" 
+                                    Command="{Binding NextExerciseCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                    BorderColor="{AppThemeBinding Light=#ddd, Dark=#666}"
+                                    BorderWidth="1"
+                                    CornerRadius="6"
+                                    FontSize="14"
+                                    Padding="0,10"
+                                    IsEnabled="{Binding CanGoToNextExercise}" />
+                        </Grid>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Timer riposo -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#fff3e0, Dark=#e65100}"
+                       HasShadow="True"
+                       CornerRadius="12"
+                       Padding="20"
+                       IsVisible="{Binding IsResting}">
+                    <StackLayout Spacing="10">
+                        <Label Text="💤 Tempo di Riposo" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#f57c00, Dark=White}"
+                               HorizontalOptions="Center" />
+
+                        <Label Text="{Binding RestTimeText}" 
+                               FontSize="32"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#f57c00, Dark=White}"
+                               HorizontalOptions="Center" />
+
+                        <Button Text="Salta Riposo" 
+                                Command="{Binding SkipRestCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#f57c00, Dark=#ff8c00}"
+                                TextColor="White"
+                                CornerRadius="6"
+                                FontSize="14"
+                                Padding="20,8" />
+                    </StackLayout>
+                </Frame>
+
+                <!-- Lista esercizi -->
+                <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                       HasShadow="True"
+                       CornerRadius="12"
+                       Padding="16">
+                    <StackLayout>
+                        <Label Text="Lista Esercizi" 
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               Margin="0,0,0,10" />
+
+                        <CollectionView ItemsSource="{Binding Exercises}">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" 
+                                          ColumnSpacing="12"
+                                          Padding="0,8">
+
+                                        <!-- Indicatore completamento -->
+                                        <Frame Grid.Column="0"
+                                               BackgroundColor="{AppThemeBinding Light=#e8f5e8, Dark=#1b5e20}"
+                                               HasShadow="False"
+                                               CornerRadius="15"
+                                               Padding="8"
+                                               WidthRequest="30"
+                                               HeightRequest="30">
+                                            <Label Text="✓" 
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light=#388e3c, Dark=White}"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center" />
+                                        </Frame>
+
+                                        <!-- Info esercizio -->
+                                        <StackLayout Grid.Column="1" VerticalOptions="Center">
+                                            <Label Text="{Binding Exercise.Name}" 
+                                                   FontSize="14"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                                            <Label Text="{Binding Sets, StringFormat='{0} serie'}" 
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                        </StackLayout>
+
+                                        <!-- Indicatore attivo -->
+                                        <Label Grid.Column="2"
+                                               Text="▶️" 
+                                               FontSize="16"
+                                               VerticalOptions="Center"
+                                               TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                               IsVisible="{Binding IsCurrentExercise}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </StackLayout>
+                </Frame>
+            </StackLayout>
+        </ScrollView>
+
+        <!-- Controlli inferiori -->
+        <Frame Grid.Row="2" 
+               BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#2d2d30}" 
+               HasShadow="True" 
+               CornerRadius="20,20,0,0"
+               Padding="20,15">
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+
+                <Button Grid.Column="0"
+                        Text="❌ Annulla" 
+                        Command="{Binding CancelWorkoutCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                        BorderColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                        BorderWidth="1"
+                        CornerRadius="8"
+                        FontSize="14"
+                        Padding="0,10" />
+
+                <Button Grid.Column="1"
+                        Text="⚙️ Modifica" 
+                        Command="{Binding EditExerciseDataCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                        BorderColor="{AppThemeBinding Light=#ddd, Dark=#666}"
+                        BorderWidth="1"
+                        CornerRadius="8"
+                        FontSize="14"
+                        Padding="0,10" />
+
+                <Button Grid.Column="2"
+                        Text="🏁 Completa" 
+                        Command="{Binding CompleteWorkoutCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        FontSize="14"
+                        FontAttributes="Bold"
+                        Padding="0,10" />
+            </Grid>
+        </Frame>
+    </Grid>
+
+</ContentPage>

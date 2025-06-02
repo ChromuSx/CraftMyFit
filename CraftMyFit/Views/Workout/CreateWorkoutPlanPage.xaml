@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Workout.CreateWorkoutPlanPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Template"
+                     IconImageSource="template.png"
+                     Command="{Binding UseTemplateCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="20" Spacing="20">
+
+            <!-- Informazioni base -->
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                   HasShadow="True"
+                   CornerRadius="12"
+                   Padding="20">
+                <StackLayout Spacing="15">
+
+                    <Label Text="Informazioni Piano" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                    <!-- Nome piano -->
+                    <StackLayout Spacing="5">
+                        <Label Text="Nome Piano *" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Entry Text="{Binding PlanTitle}" 
+                               Placeholder="Es. Push/Pull/Legs"
+                               BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}"
+                               FontSize="16" />
+                    </StackLayout>
+
+                    <!-- Descrizione -->
+                    <StackLayout Spacing="5">
+                        <Label Text="Descrizione" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Editor Text="{Binding PlanDescription}" 
+                                Placeholder="Descrivi il tuo piano di allenamento..."
+                                BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}"
+                                HeightRequest="80" />
+                    </StackLayout>
+                </StackLayout>
+            </Frame>
+
+            <!-- Selezione giorni -->
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                   HasShadow="True"
+                   CornerRadius="12"
+                   Padding="20">
+                <StackLayout Spacing="15">
+
+                    <Label Text="Giorni di Allenamento" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                    <Label Text="Seleziona i giorni della settimana per allenarti" 
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+
+                    <!-- Lista giorni con checkbox -->
+                    <CollectionView ItemsSource="{Binding AvailableDays}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*" 
+                                      ColumnSpacing="12"
+                                      Padding="0,8">
+
+                                    <CheckBox Grid.Column="0"
+                                              IsChecked="{Binding IsSelected}"
+                                              Color="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+
+                                    <Label Grid.Column="1"
+                                           Text="{Binding DisplayName}" 
+                                           FontSize="16"
+                                           TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+
+                    <!-- Riepilogo giorni selezionati -->
+                    <Label Text="{Binding WorkoutDaysCountText}" 
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                           HorizontalOptions="Center"
+                           IsVisible="{Binding HasWorkoutDays}" />
+                </StackLayout>
+            </Frame>
+
+            <!-- Giorni di allenamento creati -->
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                   HasShadow="True"
+                   CornerRadius="12"
+                   Padding="20"
+                   IsVisible="{Binding HasWorkoutDays}">
+                <StackLayout Spacing="15">
+
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="Giorni Creati" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               VerticalOptions="Center" />
+
+                        <Button Grid.Column="1"
+                                Text="Aggiungi Giorno" 
+                                Command="{Binding AddWorkoutDayCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                FontSize="14" />
+                    </Grid>
+
+                    <!-- Lista giorni creati -->
+                    <CollectionView ItemsSource="{Binding WorkoutDays}">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Frame BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#404040}"
+                                       HasShadow="False"
+                                       CornerRadius="8"
+                                       Padding="15"
+                                       Margin="0,5">
+                                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
+
+                                        <StackLayout Grid.Column="0" VerticalOptions="Center">
+                                            <Label Text="{Binding Title}" 
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                                            <Label Text="{Binding DayOfWeek}" 
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                            <Label Text="{Binding Exercises.Count, StringFormat='{0} esercizi'}" 
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+                                        </StackLayout>
+
+                                        <Button Grid.Column="1"
+                                                Text="✏️"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.EditWorkoutDayCommand}"
+                                                CommandParameter="{Binding}"
+                                                BackgroundColor="Transparent"
+                                                TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                                FontSize="16"
+                                                WidthRequest="40"
+                                                HeightRequest="40" />
+
+                                        <Button Grid.Column="2"
+                                                Text="🗑️"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.RemoveWorkoutDayCommand}"
+                                                CommandParameter="{Binding}"
+                                                BackgroundColor="Transparent"
+                                                TextColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                                                FontSize="16"
+                                                WidthRequest="40"
+                                                HeightRequest="40" />
+                                    </Grid>
+                                </Frame>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </StackLayout>
+            </Frame>
+
+            <!-- Template veloci -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#404040}"
+                   HasShadow="False"
+                   CornerRadius="12"
+                   Padding="20">
+                <StackLayout Spacing="15">
+
+                    <Label Text="🚀 Template Veloci" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                    <Label Text="Scegli un template predefinito per iniziare velocemente" 
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+
+                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+
+                        <Button Grid.Column="0" Grid.Row="0"
+                                Text="💪 Principiante Full Body"
+                                Command="{Binding UseTemplateCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12"
+                                Padding="10,15" />
+
+                        <Button Grid.Column="1" Grid.Row="0"
+                                Text="🏋️ Push/Pull/Legs"
+                                Command="{Binding UseTemplateCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12"
+                                Padding="10,15" />
+
+                        <Button Grid.Column="0" Grid.Row="1"
+                                Text="🏠 Allenamento Casa"
+                                Command="{Binding UseTemplateCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#fd7e14, Dark=#ff8c00}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12"
+                                Padding="10,15" />
+
+                        <Button Grid.Column="1" Grid.Row="1"
+                                Text="🔥 HIIT"
+                                Command="{Binding UseTemplateCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                FontSize="12"
+                                Padding="10,15" />
+                    </Grid>
+                </StackLayout>
+            </Frame>
+
+            <!-- Bottoni azione -->
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,10,0,40">
+
+                <Button Grid.Column="0"
+                        Text="Annulla" 
+                        Command="{Binding CancelCommand}"
+                        BackgroundColor="Transparent"
+                        TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                        BorderColor="{AppThemeBinding Light=#ddd, Dark=#666}"
+                        BorderWidth="1"
+                        CornerRadius="8"
+                        FontSize="16"
+                        Padding="0,12" />
+
+                <Button Grid.Column="1"
+                        Text="{Binding SaveButtonText}" 
+                        Command="{Binding SavePlanCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        FontSize="16"
+                        FontAttributes="Bold"
+                        Padding="0,12" />
+            </Grid>
+
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>

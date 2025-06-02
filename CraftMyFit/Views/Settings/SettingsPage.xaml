@@ -1,0 +1,320 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Settings.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#1e1e1e}">
+
+    <ScrollView>
+        <StackLayout Padding="0" Spacing="0">
+
+            <!-- Header con informazioni utente -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                   HasShadow="False"
+                   CornerRadius="0"
+                   Padding="20">
+                <StackLayout Orientation="Horizontal" Spacing="15">
+
+                    <!-- Avatar placeholder -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                           HasShadow="False"
+                           CornerRadius="30"
+                           Padding="15"
+                           WidthRequest="60"
+                           HeightRequest="60">
+                        <Label Text="👤" 
+                               FontSize="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+                    </Frame>
+
+                    <!-- Info utente -->
+                    <StackLayout VerticalOptions="Center" Spacing="5">
+                        <Label Text="{Binding UserName}" 
+                               FontSize="20"
+                               FontAttributes="Bold"
+                               TextColor="White" />
+                        <Label Text="{Binding AppName}" 
+                               FontSize="14"
+                               TextColor="White"
+                               Opacity="0.8" />
+                    </StackLayout>
+                </StackLayout>
+            </Frame>
+
+            <!-- Impostazioni Profilo -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="PROFILO" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Nome utente -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0">
+                        <Label Text="Nome utente" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Entry Text="{Binding UserName}"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                               BackgroundColor="Transparent"
+                               Margin="0,-5,0,0" />
+                    </StackLayout>
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+            </StackLayout>
+
+            <!-- Impostazioni Unità -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="UNITÀ DI MISURA" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Unità peso -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Unità peso" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                    </StackLayout>
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding WeightUnits}"
+                            SelectedItem="{Binding PreferredWeightUnit}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                            WidthRequest="80" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+
+                <!-- Unità lunghezza -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Unità lunghezza" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                    </StackLayout>
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding LengthUnits}"
+                            SelectedItem="{Binding PreferredLengthUnit}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                            WidthRequest="80" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+            </StackLayout>
+
+            <!-- Impostazioni Allenamento -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="ALLENAMENTO" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Tempo riposo predefinito -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Tempo riposo predefinito" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Durata pausa tra le serie" 
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                    <Picker Grid.Column="1"
+                            ItemsSource="{Binding RestTimeOptions}"
+                            SelectedItem="{Binding DefaultRestTime}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                            WidthRequest="80" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+
+                <!-- Suoni allenamento -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Suoni allenamento" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Riproduci suoni durante l'allenamento" 
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding PlayWorkoutSounds}"
+                            OnColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            VerticalOptions="Center" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+            </StackLayout>
+
+            <!-- Impostazioni Notifiche -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="NOTIFICHE" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Abilita notifiche -->
+                <Grid Padding="20,10" ColumnDefinitions="*,Auto">
+                    <StackLayout Grid.Column="0" VerticalOptions="Center">
+                        <Label Text="Abilita notifiche" 
+                               FontSize="16"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Ricevi promemoria e aggiornamenti" 
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                    <Switch Grid.Column="1"
+                            IsToggled="{Binding EnableNotifications}"
+                            OnColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            VerticalOptions="Center" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+            </StackLayout>
+
+            <!-- Dati e Backup -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="DATI E BACKUP" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Esporta dati -->
+                <Grid Padding="20,10">
+                    <Button Text="Esporta Dati" 
+                            Command="{Binding ExportDataCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+
+                <!-- Importa dati -->
+                <Grid Padding="20,10">
+                    <Button Text="Importa Dati" 
+                            Command="{Binding ImportDataCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#28a745}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+
+                <!-- Reset impostazioni -->
+                <Grid Padding="20,10">
+                    <Button Text="Ripristina Impostazioni" 
+                            Command="{Binding ResetSettingsCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                            TextColor="White"
+                            CornerRadius="8" />
+                </Grid>
+            </StackLayout>
+
+            <!-- Informazioni App -->
+            <StackLayout BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                         Padding="0"
+                         Margin="0,20,0,0">
+
+                <Label Text="INFORMAZIONI" 
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Padding="20,15,20,10" />
+
+                <!-- Informazioni app -->
+                <Grid Padding="20,10">
+                    <Button Text="Informazioni sull'App" 
+                            Command="{Binding AboutCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            BorderColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                </Grid>
+
+                <BoxView HeightRequest="1" 
+                         BackgroundColor="{AppThemeBinding Light=#e0e0e0, Dark=#404040}"
+                         Margin="20,0" />
+
+                <!-- Contatta supporto -->
+                <Grid Padding="20,10">
+                    <Button Text="Contatta il Supporto" 
+                            Command="{Binding ContactSupportCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            BorderColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                            BorderWidth="1"
+                            CornerRadius="8" />
+                </Grid>
+
+                <!-- Versione app -->
+                <StackLayout Padding="20,10">
+                    <Label Text="{Binding AppVersion, StringFormat='Versione {0}'}" 
+                           FontSize="12"
+                           TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                           HorizontalOptions="Center" />
+                </StackLayout>
+            </StackLayout>
+
+            <!-- Salva impostazioni -->
+            <Grid Padding="20" Margin="0,20,0,40">
+                <Button Text="{Binding SaveButtonText}" 
+                        Command="{Binding SaveSettingsCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        FontSize="16"
+                        Padding="0,12" />
+            </Grid>
+
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>

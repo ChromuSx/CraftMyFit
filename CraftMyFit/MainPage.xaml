@@ -1,0 +1,176 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="CraftMyFit.MainPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="CraftMyFit">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="25" Padding="30,0" VerticalOptions="Center">
+
+            <!-- Logo e titolo -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                   HasShadow="False"
+                   CornerRadius="60"
+                   WidthRequest="120"
+                   HeightRequest="120"
+                   HorizontalOptions="Center">
+                <Label Text="💪" 
+                       FontSize="60"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </Frame>
+
+            <Label x:Name="WelcomeLabel"
+                   Text="Benvenuto in CraftMyFit!"
+                   Style="{StaticResource TitleLabelStyle}"
+                   FontSize="32"
+                   HorizontalOptions="Center" />
+
+            <Label Text="La tua app personale per il fitness"
+                   Style="{StaticResource SubtitleLabelStyle}"
+                   FontSize="18"
+                   HorizontalOptions="Center"
+                   HorizontalTextAlignment="Center" />
+
+            <!-- Features -->
+            <StackLayout Spacing="20" Margin="0,40,0,0">
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="15">
+                    <Frame Grid.Column="0"
+                           BackgroundColor="{AppThemeBinding Light=#e8f5e8, Dark=#1b5e20}"
+                           HasShadow="False"
+                           CornerRadius="8"
+                           Padding="12"
+                           WidthRequest="50"
+                           HeightRequest="50">
+                        <Label Text="🏋️" 
+                               FontSize="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Piani di Allenamento Personalizzati"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Crea e gestisci i tuoi allenamenti"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="15">
+                    <Frame Grid.Column="0"
+                           BackgroundColor="{AppThemeBinding Light=#fff3e0, Dark=#e65100}"
+                           HasShadow="False"
+                           CornerRadius="8"
+                           Padding="12"
+                           WidthRequest="50"
+                           HeightRequest="50">
+                        <Label Text="📊" 
+                               FontSize="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Tracciamento Progressi"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Monitora peso, misurazioni e foto"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="15">
+                    <Frame Grid.Column="0"
+                           BackgroundColor="{AppThemeBinding Light=#f3e5f5, Dark=#4a148c}"
+                           HasShadow="False"
+                           CornerRadius="8"
+                           Padding="12"
+                           WidthRequest="50"
+                           HeightRequest="50">
+                        <Label Text="🎯" 
+                               FontSize="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Sistema di Achievement"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Sblocca traguardi e rimani motivato"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                </Grid>
+
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="15">
+                    <Frame Grid.Column="0"
+                           BackgroundColor="{AppThemeBinding Light=#e0f2f1, Dark=#00695c}"
+                           HasShadow="False"
+                           CornerRadius="8"
+                           Padding="12"
+                           WidthRequest="50"
+                           HeightRequest="50">
+                        <Label Text="📚" 
+                               FontSize="24"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    <StackLayout Grid.Column="1" VerticalOptions="Center">
+                        <Label Text="Database Esercizi"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Ampia libreria di esercizi con istruzioni"
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                    </StackLayout>
+                </Grid>
+            </StackLayout>
+
+            <!-- Bottone call-to-action -->
+            <Button x:Name="CounterBtn"
+                    Text="Inizia il tuo percorso fitness!"
+                    Clicked="OnCounterClicked"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    FontSize="18"
+                    FontAttributes="Bold"
+                    CornerRadius="12"
+                    Padding="20,15"
+                    Margin="0,40,0,0"
+                    HorizontalOptions="Fill" />
+
+            <!-- Info aggiuntive -->
+            <StackLayout Orientation="Horizontal" 
+                         HorizontalOptions="Center"
+                         Spacing="20"
+                         Margin="0,30,0,0">
+                <Label Text="✅ Gratuito" 
+                       FontSize="12"
+                       TextColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                       FontAttributes="Bold" />
+                <Label Text="✅ Offline" 
+                       FontSize="12"
+                       TextColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                       FontAttributes="Bold" />
+                <Label Text="✅ Senza pubblicità" 
+                       FontSize="12"
+                       TextColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                       FontAttributes="Bold" />
+            </StackLayout>
+
+            <!-- Version info -->
+            <Label Text="Versione 1.0.0"
+                   Style="{StaticResource CaptionLabelStyle}"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

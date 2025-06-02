@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="CraftMyFit.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:dashboard="clr-namespace:CraftMyFit.Views.Dashboard"
+    xmlns:workout="clr-namespace:CraftMyFit.Views.Workout"
+    xmlns:exercises="clr-namespace:CraftMyFit.Views.Exercises"
+    xmlns:progress="clr-namespace:CraftMyFit.Views.Progress"
+    xmlns:settings="clr-namespace:CraftMyFit.Views.Settings"
+    Title="CraftMyFit">
+
+    <!-- Configurazione dell'aspetto della shell -->
+    <Shell.Resources>
+        <ResourceDictionary>
+            <Style x:Key="BaseStyle" TargetType="Element">
+                <Setter Property="Shell.BackgroundColor" Value="{AppThemeBinding Light=White, Dark=#1e1e1e}" />
+                <Setter Property="Shell.ForegroundColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+                <Setter Property="Shell.TitleColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+                <Setter Property="Shell.DisabledColor" Value="{AppThemeBinding Light=#B4B4B4, Dark=#5C5C5C}" />
+                <Setter Property="Shell.UnselectedColor" Value="{AppThemeBinding Light=#95A5A6, Dark=#95A5A6}" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{AppThemeBinding Light=White, Dark=#1e1e1e}" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+                <Setter Property="Shell.TabBarUnselectedColor" Value="{AppThemeBinding Light=#95A5A6, Dark=#95A5A6}" />
+                <Setter Property="Shell.TabBarTitleColor" Value="{AppThemeBinding Light=Black, Dark=White}" />
+            </Style>
+        </ResourceDictionary>
+    </Shell.Resources>
+
+    <!-- Tab Bar principale -->
+    <TabBar>
+        <!-- Tab Dashboard -->
+        <ShellContent
+            Title="Dashboard"
+            Icon="home.png"
+            Route="dashboard"
+            ContentTemplate="{DataTemplate dashboard:DashboardPage}" />
+
+        <!-- Tab Allenamenti -->
+        <ShellContent
+            Title="Allenamenti"
+            Icon="fitness.png"
+            Route="workoutplans"
+            ContentTemplate="{DataTemplate workout:WorkoutPlansPage}" />
+
+        <!-- Tab Esercizi -->
+        <ShellContent
+            Title="Esercizi"
+            Icon="exercise.png"
+            Route="exercises"
+            ContentTemplate="{DataTemplate exercises:ExercisesPage}" />
+
+        <!-- Tab Progresso -->
+        <ShellContent
+            Title="Progresso"
+            Icon="chart.png"
+            Route="progress"
+            ContentTemplate="{DataTemplate progress:ProgressPhotosPage}" />
+
+        <!-- Tab Impostazioni -->
+        <ShellContent
+            Title="Impostazioni"
+            Icon="settings.png"
+            Route="settings"
+            ContentTemplate="{DataTemplate settings:SettingsPage}" />
+    </TabBar>
+
+</Shell>

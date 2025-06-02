@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Dashboard.DashboardPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:DateTimeToStringConverter x:Key="DateTimeConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <RefreshView IsRefreshing="{Binding IsBusy}" Command="{Binding RefreshCommand}">
+        <ScrollView>
+            <StackLayout Padding="16" Spacing="20">
+
+                <!-- Header con saluto -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2d2d30}" 
+                       HasShadow="True" 
+                       CornerRadius="12"
+                       Padding="20">
+                    <StackLayout>
+                        <Label Text="{Binding WelcomeMessage}" 
+                               FontSize="24" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                        <Label Text="Pronti per l'allenamento di oggi?" 
+                               FontSize="16" 
+                               TextColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}"
+                               Margin="0,5,0,0" />
+                    </StackLayout>
+                </Frame>
+
+                <!-- Statistiche rapide -->
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+
+                    <!-- Allenamenti totali -->
+                    <Frame Grid.Column="0" 
+                           BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding TotalWorkouts}" 
+                                   FontSize="20" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=White}" />
+                            <Label Text="Allenamenti" 
+                                   FontSize="12"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Streak corrente -->
+                    <Frame Grid.Column="1" 
+                           BackgroundColor="{AppThemeBinding Light=#e8f5e8, Dark=#1b5e20}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding CurrentStreak}" 
+                                   FontSize="20" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#388e3c, Dark=White}" />
+                            <Label Text="Giorni streak" 
+                                   FontSize="12"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#388e3c, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Punti totali -->
+                    <Frame Grid.Column="2" 
+                           BackgroundColor="{AppThemeBinding Light=#fff3e0, Dark=#e65100}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding TotalPoints}" 
+                                   FontSize="20" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#f57c00, Dark=White}" />
+                            <Label Text="Punti" 
+                                   FontSize="12"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#f57c00, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+                </Grid>
+
+                <!-- Prossimo allenamento -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#fff, Dark=#2d2d30}" 
+                       HasShadow="True" 
+                       CornerRadius="12"
+                       Padding="16">
+                    <StackLayout>
+                        <Label Text="Prossimo Allenamento" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               Margin="0,0,0,10" />
+
+                        <StackLayout IsVisible="{Binding NextWorkout, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <Label Text="{Binding NextWorkout.Title}" 
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            <Label Text="{Binding NextWorkout.Description}" 
+                                   FontSize="14"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                   IsVisible="{Binding NextWorkout.Description, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <Button Text="Inizia Allenamento" 
+                                    Command="{Binding StartQuickWorkoutCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    Margin="0,10,0,0" />
+                        </StackLayout>
+
+                        <StackLayout IsVisible="{Binding NextWorkout, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}">
+                            <Label Text="Nessun allenamento programmato" 
+                                   FontSize="16"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                   HorizontalOptions="Center" />
+                            <Button Text="Crea Piano di Allenamento" 
+                                    Command="{Binding NavigateToWorkoutsCommand}"
+                                    BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                    TextColor="White"
+                                    CornerRadius="8"
+                                    Margin="0,10,0,0" />
+                        </StackLayout>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Progresso recente -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#fff, Dark=#2d2d30}" 
+                       HasShadow="True" 
+                       CornerRadius="12"
+                       Padding="16"
+                       IsVisible="{Binding LatestMeasurement, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <StackLayout>
+                        <Label Text="Progresso Recente" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               Margin="0,0,0,10" />
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="20">
+                            <StackLayout Grid.Column="0">
+                                <Label Text="Peso Attuale" 
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                <Label Text="{Binding ProgressSummary}" 
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            </StackLayout>
+
+                            <StackLayout Grid.Column="1">
+                                <Label Text="Ultima Misurazione" 
+                                       FontSize="14"
+                                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                <Label Text="{Binding LatestMeasurement.Date, Converter={StaticResource DateTimeConverter}, ConverterParameter=friendly}" 
+                                       FontSize="16"
+                                       FontAttributes="Bold"
+                                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                            </StackLayout>
+                        </Grid>
+
+                        <Button Text="Visualizza Progresso" 
+                                Command="{Binding NavigateToProgressCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#17a2b8, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8"
+                                Margin="0,10,0,0" />
+                    </StackLayout>
+                </Frame>
+
+                <!-- Achievement recenti -->
+                <Frame BackgroundColor="{AppThemeBinding Light=#fff, Dark=#2d2d30}" 
+                       HasShadow="True" 
+                       CornerRadius="12"
+                       Padding="16"
+                       IsVisible="{Binding HasRecentAchievements}">
+                    <StackLayout>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="Achievement Sbloccati" 
+                                   FontSize="18" 
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   VerticalOptions="Center" />
+                            <Button Grid.Column="1"
+                                    Text="Vedi Tutti" 
+                                    Command="{Binding ViewAchievementsCommand}"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                    FontSize="14" />
+                        </Grid>
+
+                        <CollectionView ItemsSource="{Binding RecentAchievements}"
+                                        Margin="0,10,0,0">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid ColumnDefinitions="Auto,*" 
+                                          ColumnSpacing="12"
+                                          Padding="0,5">
+                                        <Label Grid.Column="0"
+                                               Text="🏆" 
+                                               FontSize="24"
+                                               VerticalOptions="Center" />
+                                        <StackLayout Grid.Column="1">
+                                            <Label Text="{Binding Title}" 
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                                            <Label Text="{Binding Description}" 
+                                                   FontSize="14"
+                                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                                        </StackLayout>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                    </StackLayout>
+                </Frame>
+
+                <!-- Azioni rapide -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="12" RowSpacing="12">
+
+                    <!-- Esercizi -->
+                    <Button Grid.Column="0"
+                            Text="Esplora Esercizi" 
+                            Command="{Binding NavigateToExercisesCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#6f42c1, Dark=#7b68ee}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            Padding="0,12" />
+
+                    <!-- Allenamenti -->
+                    <Button Grid.Column="1"
+                            Text="I Miei Piani" 
+                            Command="{Binding NavigateToWorkoutsCommand}"
+                            BackgroundColor="{AppThemeBinding Light=#fd7e14, Dark=#ff8c00}"
+                            TextColor="White"
+                            CornerRadius="8"
+                            Padding="0,12" />
+                </Grid>
+
+                <!-- Spazio aggiuntivo in basso -->
+                <BoxView HeightRequest="20" Color="Transparent" />
+
+            </StackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>

@@ -1,0 +1,394 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Progress.BodyMeasurementsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+            <converters:DateTimeToStringConverter x:Key="DateTimeConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Aggiungi"
+                     IconImageSource="add.png"
+                     Command="{Binding AddMeasurementCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <StackLayout Padding="0" Spacing="20">
+
+            <!-- Statistiche rapide -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2d2d30}" 
+                   HasShadow="False" 
+                   CornerRadius="0"
+                   Padding="16">
+                <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10">
+
+                    <!-- Peso attuale -->
+                    <Frame Grid.Column="0" 
+                           BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding LatestWeightText}" 
+                                   FontSize="16" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=White}" />
+                            <Label Text="Peso attuale" 
+                                   FontSize="11"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#1976d2, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- BMI -->
+                    <Frame Grid.Column="1" 
+                           BackgroundColor="{AppThemeBinding Light=#e8f5e8, Dark=#1b5e20}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding BMIText}" 
+                                   FontSize="16" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#388e3c, Dark=White}" />
+                            <Label Text="BMI" 
+                                   FontSize="11"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#388e3c, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+
+                    <!-- Cambiamento -->
+                    <Frame Grid.Column="2" 
+                           BackgroundColor="{AppThemeBinding Light=#fff3e0, Dark=#e65100}"
+                           HasShadow="False" 
+                           CornerRadius="8"
+                           Padding="12">
+                        <StackLayout HorizontalOptions="Center">
+                            <Label Text="{Binding WeightChangeText}" 
+                                   FontSize="16" 
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#f57c00, Dark=White}" />
+                            <Label Text="Variazione" 
+                                   FontSize="11"
+                                   HorizontalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#f57c00, Dark=#b0b0b0}" />
+                        </StackLayout>
+                    </Frame>
+                </Grid>
+            </Frame>
+
+            <!-- Form aggiunta misurazione -->
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}" 
+                   HasShadow="True" 
+                   CornerRadius="12"
+                   Margin="16,0"
+                   Padding="16"
+                   IsVisible="{Binding IsAddingMeasurement}">
+
+                <StackLayout Spacing="15">
+                    <Label Text="Nuova Misurazione" 
+                           FontSize="18" 
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                           HorizontalOptions="Center" />
+
+                    <!-- Data -->
+                    <StackLayout>
+                        <Label Text="Data" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <DatePicker Date="{Binding SelectedDate}"
+                                    BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                    TextColor="{AppThemeBinding Light=Black, Dark=White}" />
+                    </StackLayout>
+
+                    <!-- Peso -->
+                    <StackLayout>
+                        <Label Text="{Binding WeightUnit, StringFormat='Peso ({0})'}" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Entry Text="{Binding NewMeasurement.Weight}" 
+                               Keyboard="Numeric"
+                               Placeholder="Es. 70.5"
+                               BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+                    </StackLayout>
+
+                    <!-- Grasso corporeo -->
+                    <StackLayout>
+                        <Label Text="Grasso corporeo (%)" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Entry Text="{Binding NewMeasurement.BodyFatPercentage}" 
+                               Keyboard="Numeric"
+                               Placeholder="Es. 15.2"
+                               BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+                    </StackLayout>
+
+                    <!-- Massa muscolare -->
+                    <StackLayout>
+                        <Label Text="{Binding WeightUnit, StringFormat='Massa muscolare ({0})'}" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Entry Text="{Binding NewMeasurement.MuscleMass}" 
+                               Keyboard="Numeric"
+                               Placeholder="Es. 35.0"
+                               BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                               TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                               PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+                    </StackLayout>
+
+                    <!-- Misurazioni dettagliate -->
+                    <Label Text="Misurazioni Dettagliate (opzionali)" 
+                           FontSize="16" 
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                           Margin="0,10,0,5" />
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" RowSpacing="10">
+
+                        <!-- Petto -->
+                        <StackLayout Grid.Column="0">
+                            <Label Text="{Binding LengthUnit, StringFormat='Petto ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.Chest}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 95"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+
+                        <!-- Vita -->
+                        <StackLayout Grid.Column="1">
+                            <Label Text="{Binding LengthUnit, StringFormat='Vita ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.Waist}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 80"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+
+                        <!-- Fianchi -->
+                        <StackLayout Grid.Column="0">
+                            <Label Text="{Binding LengthUnit, StringFormat='Fianchi ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.Hips}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 90"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+
+                        <!-- Braccio sx -->
+                        <StackLayout Grid.Column="1">
+                            <Label Text="{Binding LengthUnit, StringFormat='Braccio Sx ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.LeftArm}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 32"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+
+                        <!-- Braccio dx -->
+                        <StackLayout Grid.Column="0">
+                            <Label Text="{Binding LengthUnit, StringFormat='Braccio Dx ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.RightArm}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 32"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+
+                        <!-- Coscia sx -->
+                        <StackLayout Grid.Column="1">
+                            <Label Text="{Binding LengthUnit, StringFormat='Coscia Sx ({0})'}" 
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                            <Entry Text="{Binding NewMeasurement.LeftThigh}" 
+                                   Keyboard="Numeric"
+                                   Placeholder="Es. 55"
+                                   BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                   TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                   FontSize="14" />
+                        </StackLayout>
+                    </Grid>
+
+                    <!-- Note -->
+                    <StackLayout>
+                        <Label Text="Note" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+                        <Editor Text="{Binding NewMeasurement.Notes}" 
+                                Placeholder="Aggiungi note sulla misurazione..."
+                                BackgroundColor="{AppThemeBinding Light=#f8f9fa, Dark=#3c3c3c}"
+                                TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                                PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}"
+                                HeightRequest="80" />
+                    </StackLayout>
+
+                    <!-- Bottoni azione -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,10,0,0">
+                        <Button Grid.Column="0"
+                                Text="Annulla" 
+                                Command="{Binding CancelAddMeasurementCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                BorderColor="{AppThemeBinding Light=#ddd, Dark=#666}"
+                                BorderWidth="1"
+                                CornerRadius="8" />
+
+                        <Button Grid.Column="1"
+                                Text="Salva" 
+                                Command="{Binding SaveMeasurementCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#28a745, Dark=#20c997}"
+                                TextColor="White"
+                                CornerRadius="8" />
+                    </Grid>
+                </StackLayout>
+            </Frame>
+
+            <!-- Storico misurazioni -->
+            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}" 
+                   HasShadow="True" 
+                   CornerRadius="12"
+                   Margin="16,0"
+                   Padding="16"
+                   IsVisible="{Binding HasMeasurements}">
+
+                <StackLayout>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="Storico Misurazioni" 
+                               FontSize="18" 
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               VerticalOptions="Center" />
+
+                        <Button Grid.Column="1"
+                                Text="Grafici" 
+                                Command="{Binding ViewHistoryCommand}"
+                                BackgroundColor="Transparent"
+                                TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                FontSize="14" />
+                    </Grid>
+
+                    <CollectionView ItemsSource="{Binding Measurements}"
+                                    Margin="0,10,0,0"
+                                    MaximumHeightRequest="400">
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto" 
+                                      ColumnSpacing="12"
+                                      Padding="0,8">
+
+                                    <Frame Grid.Column="0"
+                                           BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                                           HasShadow="False"
+                                           CornerRadius="8"
+                                           Padding="8"
+                                           WidthRequest="40"
+                                           HeightRequest="40">
+                                        <Label Text="⚖️" 
+                                               FontSize="18"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                    </Frame>
+
+                                    <StackLayout Grid.Column="1" 
+                                                 VerticalOptions="Center"
+                                                 Spacing="2">
+                                        <Label Text="{Binding Date, Converter={StaticResource DateTimeConverter}, ConverterParameter=friendly}" 
+                                               FontSize="14"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                                        <Label Text="{Binding Weight, StringFormat='Peso: {0:F1} kg'}" 
+                                               FontSize="13"
+                                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}" />
+
+                                        <Label Text="{Binding Notes}" 
+                                               FontSize="12"
+                                               TextColor="{AppThemeBinding Light=#999, Dark=#999}"
+                                               MaxLines="1"
+                                               LineBreakMode="TailTruncation"
+                                               IsVisible="{Binding Notes, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </StackLayout>
+
+                                    <Button Grid.Column="2"
+                                            Text="🗑️"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DeleteMeasurementCommand}"
+                                            CommandParameter="{Binding}"
+                                            BackgroundColor="Transparent"
+                                            TextColor="{AppThemeBinding Light=#dc3545, Dark=#dc3545}"
+                                            FontSize="16"
+                                            WidthRequest="40"
+                                            HeightRequest="40" />
+                                </Grid>
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </StackLayout>
+            </Frame>
+
+            <!-- Messaggio vuoto -->
+            <StackLayout Padding="40"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"
+                         IsVisible="{Binding HasMeasurements, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}">
+                <Label Text="⚖️" 
+                       FontSize="48"
+                       HorizontalOptions="Center"
+                       Margin="0,0,0,10" />
+                <Label Text="Nessuna misurazione registrata" 
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                <Label Text="Inizia a tracciare i tuoi progressi" 
+                       FontSize="14"
+                       HorizontalOptions="Center"
+                       TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                       Margin="0,5,0,20" />
+                <Button Text="Aggiungi Prima Misurazione" 
+                        Command="{Binding AddMeasurementCommand}"
+                        BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                        TextColor="White"
+                        CornerRadius="8"
+                        Padding="20,12" />
+            </StackLayout>
+
+            <!-- Spazio aggiuntivo in basso -->
+            <BoxView HeightRequest="20" Color="Transparent" />
+
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>

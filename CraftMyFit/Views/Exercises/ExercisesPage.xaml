@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage 
+    x:Class="CraftMyFit.Views.Exercises.ExercisesPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:CraftMyFit.Helpers.Converters"
+    Title="{Binding Title}"
+    BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header con ricerca e filtri -->
+        <Frame Grid.Row="0" 
+               BackgroundColor="{AppThemeBinding Light=#F8F9FA, Dark=#2d2d30}" 
+               HasShadow="False" 
+               CornerRadius="0"
+               Padding="16,10">
+            <StackLayout Spacing="12">
+
+                <!-- Barra di ricerca -->
+                <SearchBar x:Name="SearchBar"
+                           Placeholder="Cerca esercizi..."
+                           Text="{Binding SearchText}"
+                           BackgroundColor="{AppThemeBinding Light=White, Dark=#3c3c3c}"
+                           TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                           PlaceholderColor="{AppThemeBinding Light=#6c757d, Dark=#b0b0b0}" />
+
+                <!-- Filtri -->
+                <StackLayout Orientation="Horizontal" 
+                             Spacing="10"
+                             HorizontalOptions="FillAndExpand">
+
+                    <!-- Picker gruppo muscolare -->
+                    <Picker Title="Gruppo Muscolare"
+                            ItemsSource="{Binding MuscleGroups}"
+                            SelectedItem="{Binding SelectedMuscleGroup}"
+                            BackgroundColor="{AppThemeBinding Light=White, Dark=#3c3c3c}"
+                            TextColor="{AppThemeBinding Light=Black, Dark=White}"
+                            HorizontalOptions="FillAndExpand" />
+
+                    <!-- Toggle senza attrezzatura -->
+                    <StackLayout Orientation="Horizontal" 
+                                 Spacing="5"
+                                 VerticalOptions="Center">
+                        <Switch IsToggled="{Binding ShowOnlyWithoutEquipment}"
+                                OnColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}" />
+                        <Label Text="Solo a corpo libero" 
+                               FontSize="14"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}"
+                               VerticalOptions="Center" />
+                    </StackLayout>
+                </StackLayout>
+            </StackLayout>
+        </Frame>
+
+        <!-- Lista esercizi -->
+        <RefreshView Grid.Row="1" 
+                     IsRefreshing="{Binding IsBusy}" 
+                     Command="{Binding RefreshCommand}">
+
+            <CollectionView ItemsSource="{Binding FilteredExercises}"
+                            SelectionMode="None"
+                            BackgroundColor="Transparent">
+
+                <CollectionView.EmptyView>
+                    <StackLayout Padding="40"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+                        <Label Text="🏋️" 
+                               FontSize="48"
+                               HorizontalOptions="Center"
+                               Margin="0,0,0,10" />
+                        <Label Text="Nessun esercizio trovato" 
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+                        <Label Text="Prova a modificare i filtri di ricerca" 
+                               FontSize="14"
+                               HorizontalOptions="Center"
+                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                               Margin="0,5,0,0" />
+                    </StackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid Padding="16,8">
+                            <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"
+                                   HasShadow="True"
+                                   CornerRadius="12"
+                                   Padding="16">
+
+                                <Frame.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.SelectExerciseCommand}"
+                                                          CommandParameter="{Binding}" />
+                                </Frame.GestureRecognizers>
+
+                                <Grid ColumnDefinitions="Auto,*,Auto" 
+                                      ColumnSpacing="12">
+
+                                    <!-- Icona/Immagine -->
+                                    <Frame Grid.Column="0"
+                                           BackgroundColor="{AppThemeBinding Light=#e3f2fd, Dark=#1e3a8a}"
+                                           HasShadow="False"
+                                           CornerRadius="8"
+                                           Padding="12"
+                                           WidthRequest="50"
+                                           HeightRequest="50">
+                                        <Label Text="💪" 
+                                               FontSize="20"
+                                               HorizontalOptions="Center"
+                                               VerticalOptions="Center" />
+                                    </Frame>
+
+                                    <!-- Informazioni esercizio -->
+                                    <StackLayout Grid.Column="1" 
+                                                 VerticalOptions="Center"
+                                                 Spacing="4">
+                                        <Label Text="{Binding Name}" 
+                                               FontSize="16"
+                                               FontAttributes="Bold"
+                                               TextColor="{AppThemeBinding Light=#333, Dark=White}" />
+
+                                        <Label Text="{Binding MuscleGroup}" 
+                                               FontSize="14"
+                                               TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                                               FontAttributes="Bold" />
+
+                                        <Label Text="{Binding Description}" 
+                                               FontSize="13"
+                                               TextColor="{AppThemeBinding Light=#666, Dark=#b0b0b0}"
+                                               MaxLines="2"
+                                               LineBreakMode="TailTruncation" />
+
+                                        <!-- Attrezzatura richiesta -->
+                                        <StackLayout Orientation="Horizontal" 
+                                                     Spacing="5"
+                                                     IsVisible="{Binding RequiredEquipment.Count, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Label Text="🛠️" 
+                                                   FontSize="12"
+                                                   VerticalOptions="Center" />
+                                            <Label Text="{Binding RequiredEquipment, StringFormat='Richiede: {0}'}" 
+                                                   FontSize="12"
+                                                   TextColor="{AppThemeBinding Light=#f57c00, Dark=#ffb74d}"
+                                                   VerticalOptions="Center" />
+                                        </StackLayout>
+                                    </StackLayout>
+
+                                    <!-- Indicatore dettagli -->
+                                    <Label Grid.Column="2"
+                                           Text=">" 
+                                           FontSize="18"
+                                           TextColor="{AppThemeBinding Light=#ccc, Dark=#666}"
+                                           VerticalOptions="Center" />
+                                </Grid>
+                            </Frame>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading indicator -->
+        <ActivityIndicator Grid.Row="1"
+                           IsVisible="{Binding IsBusy}"
+                           IsRunning="{Binding IsBusy}"
+                           Color="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+    </Grid>
+
+</ContentPage>
