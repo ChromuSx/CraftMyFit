@@ -1,4 +1,5 @@
 ﻿using CraftMyFit.Data.Interfaces;
+using CraftMyFit.Models;
 using CraftMyFit.Models.Workout;
 
 namespace CraftMyFit.Services
@@ -26,14 +27,22 @@ namespace CraftMyFit.Services
                 e.RequiredEquipmentJson == "[]" || string.IsNullOrEmpty(e.RequiredEquipmentJson))
                 .ToList();
 
+            User user = new()
+            {
+                Id = userId,
+                Name = "User"
+            };
+
             WorkoutPlan plan = new()
             {
                 Title = "Principiante Full Body",
                 Description = "Piano di allenamento per principianti che allena tutto il corpo",
                 UserId = userId,
+                User = user,
                 CreatedDate = DateTime.Now,
                 ModifiedDate = DateTime.Now,
                 WorkoutDaysEnum = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],
+                WorkoutDaysJson = "[\"Monday\",\"Wednesday\",\"Friday\"]",
                 WorkoutDays = []
             };
 
@@ -97,14 +106,22 @@ namespace CraftMyFit.Services
                 e.Name.Contains("Sprint"))
                 .ToList();
 
+            User user = new()
+            {
+                Id = userId,
+                Name = "User"
+            };
+
             WorkoutPlan plan = new()
             {
                 Title = "HIIT Intenso",
                 Description = "Allenamento ad alta intensità per bruciare calorie",
                 UserId = userId,
+                User = user,
                 CreatedDate = DateTime.Now,
                 ModifiedDate = DateTime.Now,
                 WorkoutDaysEnum = [DayOfWeek.Tuesday, DayOfWeek.Thursday, DayOfWeek.Saturday],
+                WorkoutDaysJson = "[\"Tuesday\",\"Thursday\",\"Saturday\"]",
                 WorkoutDays = []
             };
 

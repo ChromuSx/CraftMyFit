@@ -1,77 +1,162 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CraftMyFit.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace CraftMyFit.Data.Migrations
 {
     public class DatabaseVersionService
     {
         private readonly CraftMyFitDbContext _context;
-        private readonly ILogger<DatabaseVersionService> _logger;
+        private const int CurrentDatabaseVersion = 1;
 
-        public DatabaseVersionService(CraftMyFitDbContext context, ILogger<DatabaseVersionService> logger)
+        public DatabaseVersionService(CraftMyFitDbContext context)
         {
             _context = context;
-            _logger = logger;
         }
 
-        public async Task MigrateAsync()
+        /// <summary>
+        /// Verifica se è necessario aggiornare il database
+        /// </summary>
+        public async Task<bool> NeedsUpdateAsync()
         {
-            // Ottieni la versione attuale del database
-            int currentVersion = await GetCurrentVersionAsync();
-
-            // Esegui le migrazioni necessarie
-            if(currentVersion < 1)
+            try
             {
-                await MigrateToVersion1Async();
-                await SetVersionAsync(1);
+                var currentVersion = await GetCurrentVersionAsync();
+                return currentVersion < CurrentDatabaseVersion;
             }
-
-            if(currentVersion < 2)
+            catch(Exception ex)
             {
-                await MigrateToVersion2Async();
-                await SetVersionAsync(2);
+                System.Diagnostics.Debug.WriteLine($"Errore nel controllo versione database: {ex.Message}");
+                return false;
             }
-
-            // Aggiungi ulteriori migrazioni quando necessario
         }
 
-        private async Task<int> GetCurrentVersionAsync()
+        /// <summary>
+        /// Ottiene la versione corrente del database
+        /// </summary>
+        public async Task<int> GetCurrentVersionAsync()
         {
-            // Verifica se esiste la tabella delle versioni
-            bool tableExists = await _context.Database.ExecuteSqlRawAsync("SELECT name FROM sqlite_master WHERE type='table' AND name='DatabaseVersion'") > 0;
-
-            if(!tableExists)
+            try
             {
-                await _context.Database.ExecuteSqlRawAsync("CREATE TABLE DatabaseVersion (Version INT NOT NULL)");
-                await _context.Database.ExecuteSqlRawAsync("INSERT INTO DatabaseVersion (Version) VALUES (0)");
+                // Verifica se la tabella delle versioni esiste
+                var tableExists = await _context.Database.SqlQueryRaw<int>(
+                    "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='DatabaseVersion'")
+                    .FirstOrDefaultAsync();
+
+                if(tableExists == 0)
+                {
+                    // Prima installazione
+                    return 0;
+                }
+
+                // Ottieni l'ultima versione
+                var version = await _context.Database.SqlQueryRaw<int>(
+                    "SELECT Version FROM DatabaseVersion ORDER BY Id DESC LIMIT 1")
+                    .FirstOrDefaultAsync();
+
+                return version;
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nel recupero versione: {ex.Message}");
                 return 0;
             }
-
-            // Ottieni la versione attuale
-            var version = await _context.Database.SqlQuery<int>("SELECT Version FROM DatabaseVersion LIMIT 1").FirstOrDefaultAsync();
-            return version;
         }
 
-        private async Task SetVersionAsync(int version)
+        /// <summary>
+        /// Esegue le migrazioni necessarie
+        /// </summary>
+        public async Task<bool> MigrateAsync()
         {
-            await _context.Database.ExecuteSqlRawAsync($"UPDATE DatabaseVersion SET Version = {version}");
+            try
+            {
+                var currentVersion = await GetCurrentVersionAsync();
+
+                // Esegui le migrazioni in sequenza
+                for(int version = currentVersion + 1; version <= CurrentDatabaseVersion; version++)
+                {
+                    bool success = await ExecuteMigrationAsync(version);
+                    if(!success)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Migrazione fallita alla versione {version}");
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nelle migrazioni: {ex.Message}");
+                return false;
+            }
         }
 
-        private async Task MigrateToVersion1Async()
+        /// <summary>
+        /// Crea la struttura iniziale del database
+        /// </summary>
+        public async Task<bool> CreateInitialStructureAsync()
         {
-            // Implementa le migrazioni necessarie per la versione 1
-            _logger.LogInformation("Migrazione alla versione 1 del database");
+            try
+            {
+                await _context.Database.EnsureCreatedAsync();
+
+                // Crea la tabella delle versioni se non esiste
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    CREATE TABLE IF NOT EXISTS DatabaseVersion (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        Version INTEGER NOT NULL,
+                        AppliedDate DATETIME NOT NULL,
+                        Description TEXT
+                    )");
+
+                // Inserisci la versione iniziale
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO DatabaseVersion (Version, AppliedDate, Description) 
+                    VALUES (1, datetime('now'), 'Initial database structure')");
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nella creazione struttura iniziale: {ex.Message}");
+                return false;
+            }
         }
 
-        private async Task MigrateToVersion2Async()
+        private async Task<bool> ExecuteMigrationAsync(int version)
         {
-            // Implementa le migrazioni necessarie per la versione 2
-            _logger.LogInformation("Migrazione alla versione 2 del database");
+            try
+            {
+                switch(version)
+                {
+                    case 1:
+                        // Migrazione alla versione 1 - struttura iniziale
+                        await CreateInitialStructureAsync();
+                        break;
+
+                    // Aggiungi qui le future migrazioni
+                    // case 2:
+                    //     await MigrateToVersion2Async();
+                    //     break;
+
+                    default:
+                        System.Diagnostics.Debug.WriteLine($"Migrazione non definita per la versione {version}");
+                        return false;
+                }
+
+                // Registra la migrazione completata
+                await _context.Database.ExecuteSqlRawAsync(@"
+                    INSERT INTO DatabaseVersion (Version, AppliedDate, Description) 
+                    VALUES ({0}, datetime('now'), {1})",
+                    version, $"Migration to version {version}");
+
+                return true;
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nella migrazione versione {version}: {ex.Message}");
+                return false;
+            }
         }
     }
 }

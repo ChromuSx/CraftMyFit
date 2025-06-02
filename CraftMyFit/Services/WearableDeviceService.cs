@@ -15,14 +15,9 @@ namespace CraftMyFit.Services
         public WearableDeviceService() => _providers =
             [
                 // Registra i provider disponibili in base alla piattaforma
-#if IOS
-            _providers.Add(new AppleWatchProvider());
-#endif
-#if ANDROID
-            _providers.Add(new WearOSProvider());
-#endif
+                new WearOSProvider(),
                 // Fitbit può essere disponibile su tutte le piattaforme
-                new FitbitProvider()
+                new FitbitProvider(),
             ];
 
         public async Task<bool> IsConnectedAsync() => _currentProvider != null && await _currentProvider.IsConnectedAsync();

@@ -1,4 +1,5 @@
 ﻿using CraftMyFit.Data.Interfaces;
+using CraftMyFit.Models;
 using CraftMyFit.Models.Gamification;
 
 namespace CraftMyFit.Services

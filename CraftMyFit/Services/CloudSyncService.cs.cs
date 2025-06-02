@@ -1,7 +1,6 @@
 ﻿using CraftMyFit.Data;
 using CraftMyFit.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 using System.Text.Json;
 
 namespace CraftMyFit.Services
@@ -220,12 +219,12 @@ namespace CraftMyFit.Services
         public async Task<DateTime?> GetLastSyncDateAsync()
         {
             DateTime lastSync = _preferenceService.GetDateTime("last_sync_date", DateTime.MinValue);
-            return await Task.FromResult(lastSync == DateTime.MinValue ? null : lastSync);
+            return await Task.FromResult<DateTime?>(lastSync == DateTime.MinValue ? null : lastSync);
         }
 
         public async Task<List<SyncConflict>> CheckForConflictsAsync()
         {
-            List<SyncConflict> conflicts = new();
+            List<SyncConflict> conflicts = [];
 
             try
             {
@@ -334,8 +333,8 @@ namespace CraftMyFit.Services
             try
             {
                 // In implementazione reale, recupereresti la lista dal cloud
-                List<CloudBackup> backups = new()
-                {
+                List<CloudBackup> backups =
+                [
                     new CloudBackup
                     {
                         Id = "backup_1",
@@ -356,7 +355,7 @@ namespace CraftMyFit.Services
                         IsAutomatic = false,
                         DataVersion = 1
                     }
-                };
+                ];
 
                 return await Task.FromResult(backups);
             }
