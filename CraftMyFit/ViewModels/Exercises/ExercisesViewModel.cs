@@ -47,6 +47,7 @@ namespace CraftMyFit.ViewModels.Exercises
             ToggleEquipmentFilterCommand = new Command(async () => await ToggleEquipmentFilter());
             SelectExerciseCommand = new Command<Exercise>(async (exercise) => await SelectExercise(exercise));
             RefreshCommand = new Command(async () => await RefreshExercises());
+            CreateExerciseCommand = new Command(async () => await CreateExercise());
 
             // Carica i dati inizialmente
             _ = Task.Run(LoadExercises);
@@ -114,6 +115,7 @@ namespace CraftMyFit.ViewModels.Exercises
         public ICommand ToggleEquipmentFilterCommand { get; }
         public ICommand SelectExerciseCommand { get; }
         public ICommand RefreshCommand { get; }
+        public ICommand CreateExerciseCommand { get; }
 
         #endregion
 
@@ -231,6 +233,11 @@ namespace CraftMyFit.ViewModels.Exercises
         }
 
         private async Task RefreshExercises() => await LoadExercises();
+
+        private async Task CreateExercise()
+        {
+            await _navigationService.NavigateToAsync("exerciseform", new Dictionary<string, object> { { "IsEdit", false } });
+        }
 
         #endregion
 

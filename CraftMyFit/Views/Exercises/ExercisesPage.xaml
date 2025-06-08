@@ -7,6 +7,10 @@
     Title="{Binding Title}"
     BackgroundColor="{AppThemeBinding Light=White, Dark=#1e1e1e}">
 
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="Nuovo" IconImageSource="plus.png" Command="{Binding CreateExerciseCommand}" />
+    </ContentPage.ToolbarItems>
+
     <ContentPage.Resources>
         <ResourceDictionary>
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />

@@ -58,6 +58,8 @@ namespace CraftMyFit.ViewModels.Workout
             AddExerciseToWorkoutDayCommand = new Command<WorkoutDay>(async (day) => await AddExerciseToWorkoutDay(day));
             RemoveExerciseCommand = new Command<(WorkoutDay day, WorkoutExercise exercise)>(async (param) => await RemoveExercise(param.day, param.exercise));
             ResetChangesCommand = new Command(async () => await ResetChanges());
+            CreateExerciseCommand = new Command<WorkoutDay>(async (day) => await CreateExercise(day));
+            EditExerciseCommand = new Command<(WorkoutDay day, WorkoutExercise exercise)>(async (param) => await EditExercise(param.day, param.exercise));
         }
 
         #region Properties
@@ -168,6 +170,8 @@ namespace CraftMyFit.ViewModels.Workout
         public ICommand AddExerciseToWorkoutDayCommand { get; }
         public ICommand RemoveExerciseCommand { get; }
         public ICommand ResetChangesCommand { get; }
+        public ICommand CreateExerciseCommand { get; }
+        public ICommand EditExerciseCommand { get; }
 
         #endregion
 
@@ -584,6 +588,22 @@ namespace CraftMyFit.ViewModels.Workout
             }
         }
 
+        private async Task CreateExercise(WorkoutDay? workoutDay)
+        {
+            if (workoutDay == null)
+                return;
+            _pendingAddExerciseDayId = workoutDay.Id;
+            await _navigationService.NavigateToAsync("exerciseform", new Dictionary<string, object> { { "IsEdit", false } });
+        }
+
+        private async Task EditExercise(WorkoutDay? workoutDay, WorkoutExercise? workoutExercise)
+        {
+            if (workoutDay == null || workoutExercise == null || workoutExercise.Exercise == null)
+                return;
+            _pendingAddExerciseDayId = workoutDay.Id;
+            await _navigationService.NavigateToAsync("exerciseform", new Dictionary<string, object> { { "Exercise", workoutExercise.Exercise }, { "IsEdit", true } });
+        }
+
         private void WorkoutDays_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(HasWorkoutDays));
@@ -635,37 +655,39 @@ namespace CraftMyFit.ViewModels.Workout
 
         public void ApplyQueryAttributes(IDictionary<string, object> query)
         {
+            // Gestione aggiunta nuovo esercizio o modifica esercizio esistente
             if (query.TryGetValue("Exercise", out object? exerciseObj) && exerciseObj is Exercise selectedExercise && _pendingAddExerciseDayId.HasValue)
             {
                 WorkoutDay? workoutDay = WorkoutDays.FirstOrDefault(wd => wd.Id == _pendingAddExerciseDayId.Value);
                 if (workoutDay != null && selectedExercise != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Aggiungendo esercizio {selectedExercise.Name} al giorno {workoutDay.DayOfWeek}");
-
-                    if (workoutDay.Exercises == null)
+                    // Se l'esercizio esiste già in questo giorno, aggiorna i dati
+                    var existing = workoutDay.Exercises?.FirstOrDefault(e => e.ExerciseId == selectedExercise.Id);
+                    if (existing != null)
                     {
-                        workoutDay.Exercises = new ObservableCollection<WorkoutExercise>();
-                        System.Diagnostics.Debug.WriteLine("Creata nuova ObservableCollection per Exercises");
+                        existing.Exercise = selectedExercise;
+                        // Puoi aggiornare anche altri campi se necessario
                     }
-
-                    WorkoutExercise workoutExercise = new()
+                    else
                     {
-                        ExerciseId = selectedExercise.Id,
-                        Exercise = selectedExercise,
-                        Sets = 3,
-                        Reps = 10,
-                        Weight = 0,
-                        RestTime = TimeSpan.FromSeconds(60),
-                        OrderIndex = workoutDay.Exercises.Count
-                    };
-
-                    workoutDay.Exercises.Add(workoutExercise);
-                    System.Diagnostics.Debug.WriteLine($"Esercizio aggiunto. Totale esercizi: {workoutDay.Exercises.Count}");
-
+                        // Nuovo esercizio
+                        if (workoutDay.Exercises == null)
+                            workoutDay.Exercises = new ObservableCollection<WorkoutExercise>();
+                        WorkoutExercise workoutExercise = new()
+                        {
+                            ExerciseId = selectedExercise.Id,
+                            Exercise = selectedExercise,
+                            Sets = 3,
+                            Reps = 10,
+                            Weight = 0,
+                            RestTime = TimeSpan.FromSeconds(60),
+                            OrderIndex = workoutDay.Exercises.Count
+                        };
+                        workoutDay.Exercises.Add(workoutExercise);
+                    }
                     CheckForChanges();
                     ((Command)SaveChangesCommand).ChangeCanExecute();
                 }
-
                 _pendingAddExerciseDayId = null;
             }
         }

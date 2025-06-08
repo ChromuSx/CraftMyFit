@@ -2,11 +2,31 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CraftMyFit.Views.Exercises.ExerciseFormPage"
-             Title="ExerciseFormPage">
-    <VerticalStackLayout>
-        <Label 
-            Text="Welcome to .NET MAUI!"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
-    </VerticalStackLayout>
+             Title="{Binding PageTitle}">
+    <ScrollView>
+        <VerticalStackLayout Spacing="18" Padding="24,24,24,12">
+            <Label Text="{Binding PageTitle}" FontSize="22" FontAttributes="Bold" HorizontalOptions="Center" />
+
+            <Entry Placeholder="Nome esercizio" Text="{Binding ExerciseName}" />
+            <Editor Placeholder="Descrizione" Text="{Binding ExerciseDescription}" AutoSize="TextChanges" HeightRequest="80" />
+
+            <Picker Title="Gruppo muscolare" ItemsSource="{Binding AvailableMuscleGroups}" SelectedItem="{Binding SelectedMuscleGroup}" />
+
+            <Label Text="Attrezzatura richiesta" FontAttributes="Bold" />
+            <CollectionView ItemsSource="{Binding SelectedEquipment}" HeightRequest="40">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <StackLayout Orientation="Horizontal" Spacing="8">
+                            <Label Text="{Binding .}" />
+                            <Button Text="Rimuovi" Command="{Binding BindingContext.RemoveEquipmentCommand, Source={x:Reference Name=ExerciseFormPage}}" CommandParameter="{Binding .}" />
+                        </StackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Button Text="Aggiungi Attrezzatura" Command="{Binding AddEquipmentCommand}" />
+
+            <Button Text="{Binding SaveButtonText}" Command="{Binding SaveExerciseCommand}" IsEnabled="{Binding HasChanges}" />
+            <Button Text="Annulla" Command="{Binding CancelCommand}" />
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
