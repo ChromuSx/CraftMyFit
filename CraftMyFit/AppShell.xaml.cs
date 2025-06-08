@@ -23,5 +23,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("exerciseform", typeof(ExerciseFormPage));
         Routing.RegisterRoute("addprogressphoto", typeof(AddProgressPhotoPage));
         Routing.RegisterRoute("bodymeasurements", typeof(BodyMeasurementsPage));
+        Routing.RegisterRoute("exercisespage", typeof(ExercisesPage));
     }
 }

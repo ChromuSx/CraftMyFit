@@ -24,6 +24,13 @@
         <!-- Contenuto principale -->
         <ScrollView>
             <StackLayout Padding="20" Spacing="20">
+                <!-- Messaggi di debug separati per i valori di binding -->
+                <StackLayout Spacing="0" Padding="0,0,0,10">
+                    <Label Text="DEBUG: WorkoutDays.Count:" FontSize="12" TextColor="Red" HorizontalOptions="Center" />
+                    <Label Text="{Binding WorkoutDays.Count}" FontSize="12" TextColor="Red" HorizontalOptions="Center" />
+                    <Label Text="DEBUG: HasWorkoutDays:" FontSize="12" TextColor="Red" HorizontalOptions="Center" />
+                    <Label Text="{Binding HasWorkoutDays}" FontSize="12" TextColor="Red" HorizontalOptions="Center" />
+                </StackLayout>
 
                 <!-- Indicatore modifiche -->
                 <Frame BackgroundColor="{AppThemeBinding Light=#fff3cd, Dark=#856404}"
@@ -136,6 +143,14 @@
                                IsVisible="{Binding HasWorkoutDays}" />
                     </StackLayout>
                 </Frame>
+
+                <!-- Messaggio guida per aggiunta esercizi -->
+                <Label Text="Seleziona almeno un giorno e poi aggiungi esercizi con il pulsante ➕ su ciascun giorno."
+                       FontSize="13"
+                       TextColor="{AppThemeBinding Light=#512BD4, Dark=#6A4C93}"
+                       HorizontalOptions="Center"
+                       Padding="0,0,0,10"
+                       IsVisible="{Binding HasWorkoutDays, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=invert}" />
 
                 <!-- Giorni di allenamento creati -->
                 <Frame BackgroundColor="{AppThemeBinding Light=White, Dark=#2d2d30}"

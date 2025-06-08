@@ -3,11 +3,20 @@ using CraftMyFit.Models.Workout;
 using CraftMyFit.Services.Interfaces;
 using CraftMyFit.ViewModels.Base;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 using System.Windows.Input;
+
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+using Microsoft.Maui.Controls;
+#endif
 
 namespace CraftMyFit.ViewModels.Exercises
 {
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+    public class ExercisesViewModel : BaseViewModel, IQueryAttributable
+#else
     public class ExercisesViewModel : BaseViewModel
+#endif
     {
         private readonly IExerciseRepository _exerciseRepository;
         private readonly INavigationService _navigationService;
@@ -92,6 +101,8 @@ namespace CraftMyFit.ViewModels.Exercises
                 }
             }
         }
+
+        public bool IsSelectionMode { get; set; } = false;
 
         #endregion
 
@@ -194,22 +205,49 @@ namespace CraftMyFit.ViewModels.Exercises
                 return;
             }
 
-            try
+            if (IsSelectionMode)
             {
-                Dictionary<string, object> parameters = new()
+                // Torna indietro passando l'esercizio selezionato
+                await Shell.Current.GoToAsync("..", true, new Dictionary<string, object>
                 {
                     { "Exercise", exercise }
-                };
-
-                await _navigationService.NavigateToAsync("ExerciseDetail", parameters);
+                });
             }
-            catch(Exception ex)
+            else
             {
-                await _dialogService.ShowAlertAsync("Errore", $"Errore nella navigazione: {ex.Message}");
+                try
+                {
+                    Dictionary<string, object> parameters = new()
+                    {
+                        { "Exercise", exercise }
+                    };
+                    await _navigationService.NavigateToAsync("exercisedetail", parameters);
+                }
+                catch(Exception ex)
+                {
+                    await _dialogService.ShowAlertAsync("Errore", $"Errore nella navigazione: {ex.Message}");
+                }
             }
         }
 
         private async Task RefreshExercises() => await LoadExercises();
+
+        #endregion
+
+        #region Navigation
+
+#if ANDROID || IOS || MACCATALYST || WINDOWS
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (query != null && query.TryGetValue("IsSelectionMode", out var isSelectionModeObj))
+            {
+                if (isSelectionModeObj is bool b)
+                    IsSelectionMode = b;
+                else if (isSelectionModeObj is string s && bool.TryParse(s, out var parsed))
+                    IsSelectionMode = parsed;
+            }
+        }
+#endif
 
         #endregion
     }
