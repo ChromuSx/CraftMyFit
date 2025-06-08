@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="CraftMyFit.Views.SplashPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="{DynamicResource Primary}">
+
+	<Grid>
+		<StackLayout VerticalOptions="Center" HorizontalOptions="Center">
+			<!-- Logo dell'app -->
+			<Image Source="logo.png"
+                   WidthRequest="120"
+                   HeightRequest="120"
+                   Margin="0,0,0,40"/>
+
+			<!-- Nome dell'app -->
+			<Label Text="CraftMyFit"
+                   FontSize="32"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   HorizontalOptions="Center"/>
+
+			<!-- Indicatore di caricamento -->
+			<ActivityIndicator x:Name="LoadingIndicator"
+                             IsRunning="True"
+                             Color="White"
+                             Margin="0,40,0,0"/>
+
+			<!-- Messaggio di stato - QUESTO È IL CAMPO CHE MANCAVA -->
+			<Label x:Name="StatusLabel"
+                   Text="Inizializzazione..."
+                   FontSize="16"
+                   TextColor="White"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0"/>
+		</StackLayout>
+	</Grid>
+</ContentPage>

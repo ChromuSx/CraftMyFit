@@ -27,18 +27,11 @@ namespace CraftMyFit.Services
                 e.RequiredEquipmentJson == "[]" || string.IsNullOrEmpty(e.RequiredEquipmentJson))
                 .ToList();
 
-            User user = new()
-            {
-                Id = userId,
-                Name = "User"
-            };
-
             WorkoutPlan plan = new()
             {
                 Title = "Principiante Full Body",
                 Description = "Piano di allenamento per principianti che allena tutto il corpo",
                 UserId = userId,
-                User = user,
                 CreatedDate = DateTime.Now,
                 ModifiedDate = DateTime.Now,
                 WorkoutDaysEnum = [DayOfWeek.Monday, DayOfWeek.Wednesday, DayOfWeek.Friday],

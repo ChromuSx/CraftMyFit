@@ -14,11 +14,15 @@ namespace CraftMyFit.Data.Repositories.Base
 
         public virtual async Task<int> AddAsync(T entity)
         {
-            _ = await _context.Set<T>().AddAsync(entity);
-            _ = await _context.SaveChangesAsync();
+            var idProperty = entity.GetType().GetProperty("Id");
+            if (idProperty?.PropertyType == typeof(int))
+            {
+                idProperty.SetValue(entity, 0);
+            }
 
-            // Assumiamo che l'entità abbia una proprietà Id
-            System.Reflection.PropertyInfo? idProperty = entity.GetType().GetProperty("Id");
+            await _context.Set<T>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+
             return (int)idProperty.GetValue(entity);
         }
 

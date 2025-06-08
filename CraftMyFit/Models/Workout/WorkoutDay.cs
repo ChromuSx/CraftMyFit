@@ -15,10 +15,9 @@ namespace CraftMyFit.Models.Workout
 
         public int OrderIndex { get; set; }  // Per mantenere l'ordine dei giorni
 
-        // Relazioni
         public int WorkoutPlanId { get; set; }
-        public required WorkoutPlan WorkoutPlan { get; set; }
+        public WorkoutPlan? WorkoutPlan { get; set; } // Nullable per lazy loading
 
-        public required List<WorkoutExercise> Exercises { get; set; }
+        public List<WorkoutExercise> Exercises { get; set; } = []; // Inizializzata ma non required
     }
 }

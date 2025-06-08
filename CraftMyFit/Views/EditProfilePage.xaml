@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="CraftMyFit.Views.EditProfilePage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="Modifica Profilo">
+
+    <ScrollView>
+        <StackLayout Padding="20">
+            <Label Text="Modifica Profilo" 
+                   FontSize="24" 
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"/>
+
+            <Label Text="Editor profilo in sviluppo..." 
+                   FontSize="16"
+                   HorizontalOptions="Center"
+                   Margin="0,20,0,0"/>
+        </StackLayout>
+    </ScrollView>
+</ContentPage>

@@ -21,11 +21,10 @@ namespace CraftMyFit.Models.Workout
         public DateTime CreatedDate { get; set; }
         public DateTime ModifiedDate { get; set; }
 
-        // Relazioni
         public int UserId { get; set; }
-        public required User User { get; set; }
+        public User? User { get; set; } // Nullable perché può essere caricata con lazy loading
 
-        public required List<WorkoutDay> WorkoutDays { get; set; }
+        public List<WorkoutDay> WorkoutDays { get; set; } = []; // Inizializzata ma non required
 
         // Proprietà calcolata (non mappata nel DB)
         [NotMapped]

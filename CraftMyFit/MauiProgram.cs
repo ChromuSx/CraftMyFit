@@ -1,4 +1,5 @@
-﻿using CraftMyFit.Data;
+﻿// MauiProgram.cs - Aggiornato con registrazione pagine di autenticazione
+using CraftMyFit.Data;
 using CraftMyFit.Data.Interfaces;
 using CraftMyFit.Data.Repositories;
 using CraftMyFit.Services;
@@ -9,6 +10,7 @@ using CraftMyFit.ViewModels.Exercises;
 using CraftMyFit.ViewModels.Progress;
 using CraftMyFit.ViewModels.Settings;
 using CraftMyFit.ViewModels.Workout;
+using CraftMyFit.Views; // Per le pagine di autenticazione
 using CraftMyFit.Views.Dashboard;
 using CraftMyFit.Views.Exercises;
 using CraftMyFit.Views.Progress;
@@ -73,7 +75,7 @@ namespace CraftMyFit
             builder.Services.AddTransient<BodyMeasurementsViewModel>();
             builder.Services.AddTransient<SettingsViewModel>();
 
-            // Registra Pages principali
+            // Registra Pages principali (esistenti del progetto)
             builder.Services.AddTransient<DashboardPage>();
             builder.Services.AddTransient<ExercisesPage>();
             builder.Services.AddTransient<ExerciseDetailPage>();
@@ -86,7 +88,22 @@ namespace CraftMyFit
             builder.Services.AddTransient<ProgressPhotosPage>();
             builder.Services.AddTransient<AddProgressPhotoPage>();
             builder.Services.AddTransient<BodyMeasurementsPage>();
-            builder.Services.AddTransient<SettingsPage>();
+            builder.Services.AddTransient<Views.Settings.SettingsPage>();
+
+            // === REGISTRA PAGINE DI AUTENTICAZIONE (NUOVE) ===
+            builder.Services.AddTransient<LoginPage>();
+            builder.Services.AddTransient<SplashPage>();
+
+            // Pagine opzionali (se create)
+            try
+            {
+                builder.Services.AddTransient<WorkoutDetailPage>();
+                builder.Services.AddTransient<EditProfilePage>();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Pagine opzionali non registrate: {ex.Message}");
+            }
 
             // Registra servizi HTTP per API (se necessari)
             builder.Services.AddHttpClient("CraftMyFitApi", client =>
@@ -112,7 +129,7 @@ namespace CraftMyFit
 
                     System.Diagnostics.Debug.WriteLine("Database inizializzato con successo");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine($"Errore nell'inizializzazione del database: {ex.Message}");
                 }

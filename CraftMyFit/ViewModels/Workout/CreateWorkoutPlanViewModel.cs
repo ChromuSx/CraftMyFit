@@ -236,7 +236,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task SavePlan()
         {
-            if(!CanSavePlan())
+            if (!CanSavePlan())
             {
                 return;
             }
@@ -245,7 +245,6 @@ namespace CraftMyFit.ViewModels.Workout
             {
                 IsSaving = true;
 
-                // Crea il piano di allenamento
                 int currentUserId = _preferenceService.GetInt("current_user_id", 1);
                 WorkoutPlan workoutPlan = new()
                 {
@@ -254,20 +253,17 @@ namespace CraftMyFit.ViewModels.Workout
                     CreatedDate = DateTime.Now,
                     ModifiedDate = DateTime.Now,
                     UserId = currentUserId,
-                    User = new Models.User { Id = currentUserId, Name = "User" }, // Placeholder
                     WorkoutDays = WorkoutDays.ToList(),
-                    WorkoutDaysJson = System.Text.Json.JsonSerializer.Serialize(SelectedDays.ToList()) // Inizializza JSON
+                    WorkoutDaysJson = System.Text.Json.JsonSerializer.Serialize(SelectedDays.ToList())
                 };
 
                 // Salva nel database
                 int planId = await _workoutPlanRepository.AddAsync(workoutPlan);
 
                 await _dialogService.ShowAlertAsync("Successo", "Piano di allenamento creato con successo!");
-
-                // Torna alla schermata precedente
                 await _navigationService.GoBackAsync();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nella creazione del piano: {ex.Message}");
             }
@@ -276,7 +272,6 @@ namespace CraftMyFit.ViewModels.Workout
                 IsSaving = false;
             }
         }
-
         private async Task Cancel()
         {
             if(HasChanges())

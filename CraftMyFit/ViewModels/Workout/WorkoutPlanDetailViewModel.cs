@@ -257,7 +257,6 @@ namespace CraftMyFit.ViewModels.Workout
                         CreatedDate = DateTime.Now,
                         ModifiedDate = DateTime.Now,
                         UserId = WorkoutPlan.UserId,
-                        User = new Models.User { Id = WorkoutPlan.UserId, Name = "User" }, // Placeholder
                         WorkoutDays = [] // Inizializza lista vuota
                     };
 

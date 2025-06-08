@@ -1,5 +1,4 @@
-﻿// AuthService.cs - Servizio di autenticazione
-using CraftMyFit.Models;
+﻿using CraftMyFit.Models;
 using CraftMyFit.Services.Interfaces;
 using System.Text.Json;
 
@@ -7,13 +6,15 @@ namespace CraftMyFit.Services.Authentication
 {
     public class AuthService
     {
+        private readonly INavigationService _navigationService;
         private readonly IPreferenceService _preferenceService;
         private readonly IDialogService _dialogService;
 
         public event EventHandler<AuthStatusChangedEventArgs>? AuthStatusChanged;
 
-        public AuthService(IPreferenceService preferenceService, IDialogService dialogService)
+        public AuthService(INavigationService navigationService, IPreferenceService preferenceService, IDialogService dialogService)
         {
+            _navigationService = navigationService;
             _preferenceService = preferenceService;
             _dialogService = dialogService;
             LoadStoredAuthData();
@@ -29,128 +30,98 @@ namespace CraftMyFit.Services.Authentication
 
         #region Public Methods
 
-        /// <summary>
-        /// Autentica l'utente con email e password
-        /// </summary>
         public async Task<AuthResult> LoginAsync(string email, string password)
         {
             try
             {
-                if(string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+                // Logica di login esistente
+                if (email == "demo@craftmyfit.com" && password == "demo123")
                 {
-                    return new AuthResult { Success = false, ErrorMessage = "Email e password sono obbligatori" };
+                    // Salva stato di autenticazione
+                    _preferenceService.SetBool("IsLoggedIn", true);
+                    _preferenceService.SetString("UserEmail", email);
+
+                    // Naviga alla dashboard
+                    await _navigationService.NavigateToAsync("//dashboard");
+
+                    return new AuthResult { Success = true };
                 }
 
-                // Validazione email
-                if(!IsValidEmail(email))
+                return new AuthResult
                 {
-                    return new AuthResult { Success = false, ErrorMessage = "Formato email non valido" };
-                }
-
-                // In un'implementazione reale, qui faresti la chiamata API
-                // Per ora simuliamo l'autenticazione
-                await Task.Delay(1000); // Simula latenza di rete
-
-                // Simulazione autenticazione locale
-                if(email == "demo@craftmyfit.com" && password == "demo123")
-                {
-                    User user = new()
-                    {
-                        Id = 1,
-                        Name = "Demo User",
-                        Email = email,
-                        RegistrationDate = DateTime.Now.AddDays(-30),
-                        IsEmailVerified = true
-                    };
-
-                    string token = GenerateMockJwtToken(user);
-
-                    await SetAuthenticatedUserAsync(user, token);
-
-                    return new AuthResult { Success = true, User = user, Token = token };
-                }
-
-                return new AuthResult { Success = false, ErrorMessage = "Credenziali non valide" };
-            }
-            catch(Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nel login: {ex.Message}");
-                return new AuthResult { Success = false, ErrorMessage = "Errore durante l'autenticazione" };
-            }
-        }
-
-        /// <summary>
-        /// Registra un nuovo utente
-        /// </summary>
-        public async Task<AuthResult> RegisterAsync(string name, string email, string password)
-        {
-            try
-            {
-                // Validazioni
-                if(string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-                {
-                    return new AuthResult { Success = false, ErrorMessage = "Tutti i campi sono obbligatori" };
-                }
-
-                if(!IsValidEmail(email))
-                {
-                    return new AuthResult { Success = false, ErrorMessage = "Formato email non valido" };
-                }
-
-                if(password.Length < 6)
-                {
-                    return new AuthResult { Success = false, ErrorMessage = "La password deve essere di almeno 6 caratteri" };
-                }
-
-                // Simulazione registrazione
-                await Task.Delay(1000);
-
-                User user = new()
-                {
-                    Id = new Random().Next(1000, 9999),
-                    Name = name,
-                    Email = email,
-                    RegistrationDate = DateTime.Now,
-                    IsEmailVerified = false
+                    Success = false,
+                    ErrorMessage = "Credenziali non valide"
                 };
-
-                string token = GenerateMockJwtToken(user);
-
-                await SetAuthenticatedUserAsync(user, token);
-
-                return new AuthResult { Success = true, User = user, Token = token };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nella registrazione: {ex.Message}");
-                return new AuthResult { Success = false, ErrorMessage = "Errore durante la registrazione" };
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Errore durante il login: {ex.Message}"
+                };
             }
         }
 
-        /// <summary>
-        /// Logout dell'utente corrente
-        /// </summary>
-        public async Task<bool> LogoutAsync()
+        public async Task<AuthResult> LogoutAsync()
         {
             try
             {
-                // Pulisce i dati locali
-                CurrentUser = null;
-                AuthToken = null;
+                // Rimuovi dati di autenticazione
+                _preferenceService.Remove("IsLoggedIn");
+                _preferenceService.Remove("UserEmail");
 
-                // Rimuove i dati salvati
-                _preferenceService.Remove("auth_user");
-                _preferenceService.Remove("auth_token");
-                _preferenceService.Remove("auth_expires");
+                // Pulisci altri dati se necessario
+                // _preferenceService.Remove("AuthToken");
 
-                // Notifica il cambio di stato
-                AuthStatusChanged?.Invoke(this, new AuthStatusChangedEventArgs { IsAuthenticated = false });
+                // Naviga alla pagina di login
+                await _navigationService.NavigateToAsync("//login");
 
-                return await Task.FromResult(true);
+                return new AuthResult { Success = true };
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nel logout: {ex.Message}");
+                return new AuthResult
+                {
+                    Success = false,
+                    ErrorMessage = $"Errore durante il logout: {ex.Message}"
+                };
+            }
+        }
+
+        public bool IsLoggedIn()
+        {
+            return _preferenceService.GetBool("IsLoggedIn", false);
+        }
+
+        /// <summary>
+        /// Verifica se il token è ancora valido
+        /// </summary>
+        public async Task<bool> IsTokenValidAsync()
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(AuthToken))
+                {
+                    return false;
+                }
+
+                // Controlla se il token è scaduto localmente
+                DateTime expirationDate = _preferenceService.GetDateTime("auth_expires", DateTime.MinValue);
+                if (expirationDate != DateTime.MinValue && DateTime.Now >= expirationDate)
+                {
+                    System.Diagnostics.Debug.WriteLine("Token scaduto localmente");
+                    return false;
+                }
+
+                // In implementazione reale, qui verificheresti il token con il server
+                await Task.Delay(500);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Errore nella validazione token: {ex.Message}");
                 return false;
             }
         }
@@ -162,122 +133,29 @@ namespace CraftMyFit.Services.Authentication
         {
             try
             {
-                if(string.IsNullOrEmpty(AuthToken))
+                if (string.IsNullOrEmpty(AuthToken))
                 {
                     return false;
                 }
 
-                // In implementazione reale, qui chiameresti l'endpoint di refresh
                 await Task.Delay(500);
 
-                // Simula rinnovo token
-                if(CurrentUser != null)
+                if (CurrentUser != null)
                 {
                     string newToken = GenerateMockJwtToken(CurrentUser);
                     AuthToken = newToken;
 
                     _preferenceService.SetString("auth_token", AuthToken);
-                    _preferenceService.SetDateTime("auth_expires", DateTime.Now.AddDays(7));
+                    _preferenceService.SetDateTime("auth_expires", DateTime.Now.AddHours(24));
 
                     return true;
                 }
 
                 return false;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nel rinnovo token: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Verifica se il token è ancora valido
-        /// </summary>
-        public async Task<bool> IsTokenValidAsync()
-        {
-            try
-            {
-                if(string.IsNullOrEmpty(AuthToken))
-                {
-                    return false;
-                }
-
-                DateTime expiryDate = _preferenceService.GetDateTime("auth_expires", DateTime.MinValue);
-                if(expiryDate <= DateTime.Now)
-                {
-                    // Token scaduto, prova a rinnovarlo
-                    return await RefreshTokenAsync();
-                }
-
-                return await Task.FromResult(true);
-            }
-            catch(Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nella validazione token: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Invia email di reset password
-        /// </summary>
-        public async Task<bool> SendPasswordResetEmailAsync(string email)
-        {
-            try
-            {
-                if(!IsValidEmail(email))
-                {
-                    return false;
-                }
-
-                // Simulazione invio email
-                await Task.Delay(1000);
-
-                await _dialogService.ShowAlertAsync("Email Inviata",
-                    "Ti abbiamo inviato un'email con le istruzioni per reimpostare la password.");
-
-                return true;
-            }
-            catch(Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nell'invio email reset: {ex.Message}");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Cambia la password dell'utente corrente
-        /// </summary>
-        public async Task<bool> ChangePasswordAsync(string currentPassword, string newPassword)
-        {
-            try
-            {
-                if(!IsAuthenticated)
-                {
-                    return false;
-                }
-
-                if(string.IsNullOrWhiteSpace(currentPassword) || string.IsNullOrWhiteSpace(newPassword))
-                {
-                    return false;
-                }
-
-                if(newPassword.Length < 6)
-                {
-                    await _dialogService.ShowAlertAsync("Errore", "La nuova password deve essere di almeno 6 caratteri");
-                    return false;
-                }
-
-                // Simulazione cambio password
-                await Task.Delay(1000);
-
-                await _dialogService.ShowAlertAsync("Successo", "Password cambiata con successo");
-                return true;
-            }
-            catch(Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Errore nel cambio password: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore nel refresh token: {ex.Message}");
                 return false;
             }
         }
@@ -290,76 +168,34 @@ namespace CraftMyFit.Services.Authentication
         {
             try
             {
-                string userJson = _preferenceService.GetString("auth_user");
-                string token = _preferenceService.GetString("auth_token");
-                DateTime expiryDate = _preferenceService.GetDateTime("auth_expires", DateTime.MinValue);
+                string userJson = _preferenceService.GetString("auth_user", string.Empty);
+                string token = _preferenceService.GetString("auth_token", string.Empty);
 
-                if(!string.IsNullOrEmpty(userJson) && !string.IsNullOrEmpty(token) && expiryDate > DateTime.Now)
+                if (!string.IsNullOrEmpty(userJson) && !string.IsNullOrEmpty(token))
                 {
                     CurrentUser = JsonSerializer.Deserialize<User>(userJson);
                     AuthToken = token;
+
+                    System.Diagnostics.Debug.WriteLine($"Dati di autenticazione caricati per utente: {CurrentUser?.Email}");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento dati auth: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Errore nel caricamento dati autenticazione: {ex.Message}");
+
+                // Pulisci i dati corrotti
+                _preferenceService.Remove("auth_user");
+                _preferenceService.Remove("auth_token");
+                _preferenceService.Remove("auth_expires");
             }
         }
 
-        private async Task SetAuthenticatedUserAsync(User user, string token)
+        private string GenerateMockJwtToken(User user)
         {
-            CurrentUser = user;
-            AuthToken = token;
-
-            // Salva i dati
-            string userJson = JsonSerializer.Serialize(user);
-            _preferenceService.SetString("auth_user", userJson);
-            _preferenceService.SetString("auth_token", token);
-            _preferenceService.SetDateTime("auth_expires", DateTime.Now.AddDays(7));
-
-            // Notifica il cambio di stato
-            AuthStatusChanged?.Invoke(this, new AuthStatusChangedEventArgs
-            {
-                IsAuthenticated = true,
-                User = user
-            });
-
-            await Task.CompletedTask;
+            // Token JWT fittizio per simulazione
+            return $"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.{Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{{\"sub\":\"{user.Id}\",\"email\":\"{user.Email}\",\"exp\":{DateTimeOffset.Now.AddHours(24).ToUnixTimeSeconds()}}}"))}";
         }
-
-        private static bool IsValidEmail(string email)
-        {
-            try
-            {
-                System.Net.Mail.MailAddress addr = new(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        private static string GenerateMockJwtToken(User user) =>
-            // In un'implementazione reale, il token JWT sarebbe generato dal server
-            // Qui creiamo un token fittizio per scopi dimostrativi
-            $"mock_jwt_token_{user.Id}_{DateTime.Now.Ticks}";
 
         #endregion
-    }
-
-    // Modelli per l'autenticazione
-    public class AuthResult
-    {
-        public bool Success { get; set; }
-        public User? User { get; set; }
-        public string? Token { get; set; }
-        public string? ErrorMessage { get; set; }
-    }
-
-    public class AuthStatusChangedEventArgs : EventArgs
-    {
-        public bool IsAuthenticated { get; set; }
-        public User? User { get; set; }
     }
 }

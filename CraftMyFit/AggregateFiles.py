@@ -18,7 +18,7 @@ def copy_files_from_subfolders():
 
     # Sets of directories and file extensions to exclude/include
     excluded_dirs = {'.git', '.vs', 'bin', 'obj', 'Debug', 'Release', 'packages', 'Migrations', 'SmartAttachments'}
-    included_file_extensions = {'.sln', '.csproj', '.vbproj', '.cs', '.html', '.cshtml', '.css', '.js', '.mrt', '.json'}
+    included_file_extensions = {'.xaml', '.xaml.cs', '.cs', '.html', '.cshtml', '.css', '.js', '.mrt', '.json'}
 
     # Walk through the source directory and its subfolders
     for root, dirs, files in os.walk(src_dir):
