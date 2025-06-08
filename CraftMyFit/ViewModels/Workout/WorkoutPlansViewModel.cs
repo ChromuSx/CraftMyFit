@@ -123,8 +123,21 @@ namespace CraftMyFit.ViewModels.Workout
                 // Ottieni l'ID utente corrente (per ora hardcoded)
                 int currentUserId = _preferenceService.GetInt("current_user_id", 1);
 
+                // Get all workout plans for user
                 List<WorkoutPlan> workoutPlans = await _workoutPlanRepository.GetByUserIdAsync(currentUserId);
-                _workoutPlans = [.. workoutPlans];
+                
+                // Load full details for each plan
+                List<WorkoutPlan> fullPlans = [];
+                foreach(var plan in workoutPlans)
+                {
+                    var fullPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(plan.Id);
+                    if(fullPlan != null)
+                    {
+                        fullPlans.Add(fullPlan);
+                    }
+                }
+                
+                _workoutPlans = [.. fullPlans];
 
                 await ApplyFilters();
             }

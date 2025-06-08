@@ -8,7 +8,8 @@ using System.Windows.Input;
 namespace CraftMyFit.ViewModels.Workout
 {
     [QueryProperty(nameof(WorkoutPlan), "WorkoutPlan")]
-    public class WorkoutPlanDetailViewModel : BaseViewModel
+    [QueryProperty(nameof(RefreshRequest), "Refresh")]
+    public class WorkoutPlanDetailViewModel : BaseViewModel, IQueryAttributable
     {
         private readonly IWorkoutPlanRepository _workoutPlanRepository;
         private readonly INavigationService _navigationService;
@@ -19,6 +20,7 @@ namespace CraftMyFit.ViewModels.Workout
         private ObservableCollection<WorkoutDay> _workoutDays = [];
         private WorkoutDay? _selectedWorkoutDay;
         private bool _isLoading;
+        private bool _refreshRequest;
 
         public WorkoutPlanDetailViewModel(
             IWorkoutPlanRepository workoutPlanRepository,
@@ -31,6 +33,8 @@ namespace CraftMyFit.ViewModels.Workout
             _dialogService = dialogService;
             _preferenceService = preferenceService;
 
+            Title = "Piano di Allenamento";
+
             // Inizializza i comandi
             LoadDetailsCommand = new Command(async () => await LoadDetails());
             StartWorkoutCommand = new Command(async () => await StartWorkout());
@@ -41,6 +45,8 @@ namespace CraftMyFit.ViewModels.Workout
             SharePlanCommand = new Command(async () => await SharePlan());
             ViewExerciseCommand = new Command<WorkoutExercise>(async (exercise) => await ViewExercise(exercise));
             GoBackCommand = new Command(async () => await GoBack());
+
+            SubscribeToWorkoutDaysCollectionChanged();
         }
 
         #region Properties
@@ -50,9 +56,49 @@ namespace CraftMyFit.ViewModels.Workout
             get => _workoutPlan;
             set
             {
-                if(SetProperty(ref _workoutPlan, value))
+                if (SetProperty(ref _workoutPlan, value))
                 {
-                    OnWorkoutPlanChanged();
+                    // Clear existing workout days
+                    WorkoutDays.Clear();
+
+                    // Add new workout days if available
+                    if (value?.WorkoutDays != null)
+                    {
+                        foreach (var day in value.WorkoutDays.OrderBy(d => d.OrderIndex))
+                        {
+                            WorkoutDays.Add(day);
+                        }
+                    }
+
+                    OnPropertyChanged(nameof(PlanTitle));
+                    OnPropertyChanged(nameof(PlanDescription));
+                    OnPropertyChanged(nameof(HasDescription));
+                    OnPropertyChanged(nameof(CreatedDateText));
+                    OnPropertyChanged(nameof(ModifiedDateText));
+                    OnPropertyChanged(nameof(HasWorkoutDays));
+                    OnPropertyChanged(nameof(WorkoutDaysCount));
+                    OnPropertyChanged(nameof(WorkoutDaysCountText));
+                    OnPropertyChanged(nameof(TotalExercisesCount));
+                    OnPropertyChanged(nameof(TotalExercisesText));
+                    OnPropertyChanged(nameof(WorkoutDaysListText));
+
+                    System.Diagnostics.Debug.WriteLine($"WorkoutPlan updated: {value?.Title} with {WorkoutDays.Count} days");
+                    foreach (var day in WorkoutDays)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Day {day.DayOfWeek}: {day.Exercises?.Count ?? 0} exercises");
+                    }
+                }
+            }
+        }
+
+        public bool RefreshRequest
+        {
+            get => _refreshRequest;
+            set
+            {
+                if (SetProperty(ref _refreshRequest, value) && value)
+                {
+                    _ = LoadDetails();
                 }
             }
         }
@@ -60,7 +106,22 @@ namespace CraftMyFit.ViewModels.Workout
         public ObservableCollection<WorkoutDay> WorkoutDays
         {
             get => _workoutDays;
-            set => SetProperty(ref _workoutDays, value);
+            private set
+            {
+                if (_workoutDays != null)
+                    _workoutDays.CollectionChanged -= WorkoutDays_CollectionChanged;
+                if (SetProperty(ref _workoutDays, value))
+                {
+                    if (_workoutDays != null)
+                        _workoutDays.CollectionChanged += WorkoutDays_CollectionChanged;
+                    OnPropertyChanged(nameof(HasWorkoutDays));
+                    OnPropertyChanged(nameof(WorkoutDaysCount));
+                    OnPropertyChanged(nameof(WorkoutDaysCountText));
+                    OnPropertyChanged(nameof(TotalExercisesCount));
+                    OnPropertyChanged(nameof(TotalExercisesText));
+                    OnPropertyChanged(nameof(WorkoutDaysListText));
+                }
+            }
         }
 
         public WorkoutDay? SelectedWorkoutDay
@@ -112,18 +173,16 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async void OnWorkoutPlanChanged()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan != null)
             {
-                return;
+                Title = WorkoutPlan.Title;
+                await LoadDetails();
             }
-
-            Title = WorkoutPlan.Title;
-            await LoadDetails();
         }
 
         private async Task LoadDetails()
         {
-            if(WorkoutPlan == null || IsLoading)
+            if (WorkoutPlan == null || IsLoading)
             {
                 return;
             }
@@ -134,32 +193,38 @@ namespace CraftMyFit.ViewModels.Workout
 
                 // Carica i dettagli completi del piano di allenamento
                 WorkoutPlan fullPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(WorkoutPlan.Id);
-                if(fullPlan != null)
+                if (fullPlan != null)
                 {
-                    WorkoutPlan = fullPlan;
-                    // Correzione dell'operatore ??
-                    WorkoutDays = fullPlan.WorkoutDays != null ? [.. fullPlan.WorkoutDays.OrderBy(wd => wd.OrderIndex)] : [];
+                    WorkoutPlan = fullPlan; // Update the entire plan reference
+
+                    System.Diagnostics.Debug.WriteLine($"Loaded plan: {fullPlan.Title} with {WorkoutDays.Count} days and {TotalExercisesCount} exercises");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine("Failed to load workout plan details");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nel caricamento dei dettagli: {ex.Message}");
             }
             finally
             {
                 IsLoading = false;
+                RefreshRequest = false; // Reset refresh flag
             }
         }
+
         private async Task StartWorkout()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan == null)
             {
                 return;
             }
 
             try
             {
-                if(!HasWorkoutDays)
+                if (!HasWorkoutDays)
                 {
                     await _dialogService.ShowAlertAsync("Piano Vuoto", "Questo piano non contiene giorni di allenamento.");
                     return;
@@ -168,7 +233,7 @@ namespace CraftMyFit.ViewModels.Workout
                 // Se c'è più di un giorno, chiedi quale scegliere
                 WorkoutDay? selectedDay = null;
 
-                if(WorkoutDays.Count == 1)
+                if (WorkoutDays.Count == 1)
                 {
                     selectedDay = WorkoutDays.First();
                 }
@@ -181,17 +246,17 @@ namespace CraftMyFit.ViewModels.Workout
                         null,
                         dayNames);
 
-                    if(selectedDayName is not null and not "Annulla")
+                    if (selectedDayName is not null and not "Annulla")
                     {
                         int index = Array.IndexOf(dayNames, selectedDayName);
-                        if(index >= 0 && index < WorkoutDays.Count)
+                        if (index >= 0 && index < WorkoutDays.Count)
                         {
                             selectedDay = WorkoutDays[index];
                         }
                     }
                 }
 
-                if(selectedDay != null)
+                if (selectedDay != null)
                 {
                     Dictionary<string, object> parameters = new()
                     {
@@ -202,7 +267,7 @@ namespace CraftMyFit.ViewModels.Workout
                     await _navigationService.NavigateToAsync("workoutexecution", parameters);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nell'avvio dell'allenamento: {ex.Message}");
             }
@@ -210,7 +275,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task EditPlan()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan == null)
             {
                 return;
             }
@@ -225,7 +290,7 @@ namespace CraftMyFit.ViewModels.Workout
 
                 await _navigationService.NavigateToAsync("editworkoutplan", parameters);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nell'apertura dell'editor: {ex.Message}");
             }
@@ -233,7 +298,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task DuplicatePlan()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan == null)
             {
                 return;
             }
@@ -246,7 +311,7 @@ namespace CraftMyFit.ViewModels.Workout
                     "Duplica",
                     "Annulla");
 
-                if(confirmed)
+                if (confirmed)
                 {
                     // Crea una copia del piano
                     WorkoutPlan duplicatedPlan = new()
@@ -264,7 +329,7 @@ namespace CraftMyFit.ViewModels.Workout
                     await _dialogService.ShowAlertAsync("Successo", "Piano duplicato con successo!");
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nella duplicazione: {ex.Message}");
             }
@@ -272,7 +337,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task DeletePlan()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan == null)
             {
                 return;
             }
@@ -285,14 +350,14 @@ namespace CraftMyFit.ViewModels.Workout
                     "Elimina",
                     "Annulla");
 
-                if(confirmed)
+                if (confirmed)
                 {
                     await _workoutPlanRepository.DeleteAsync(WorkoutPlan.Id);
                     await _dialogService.ShowAlertAsync("Eliminato", "Piano eliminato con successo");
                     await _navigationService.GoBackAsync();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nell'eliminazione: {ex.Message}");
             }
@@ -300,7 +365,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task SelectWorkoutDay(WorkoutDay? workoutDay)
         {
-            if(workoutDay == null)
+            if (workoutDay == null)
             {
                 return;
             }
@@ -318,7 +383,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task SharePlan()
         {
-            if(WorkoutPlan == null)
+            if (WorkoutPlan == null)
             {
                 return;
             }
@@ -327,7 +392,7 @@ namespace CraftMyFit.ViewModels.Workout
             {
                 string shareText = $"Piano di Allenamento: {WorkoutPlan.Title}\n";
 
-                if(HasDescription)
+                if (HasDescription)
                 {
                     shareText += $"Descrizione: {WorkoutPlan.Description}\n";
                 }
@@ -339,7 +404,7 @@ namespace CraftMyFit.ViewModels.Workout
                 // TODO: Implementare la condivisione nativa
                 await _dialogService.ShowAlertAsync("Condivisione", shareText);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nella condivisione: {ex.Message}");
             }
@@ -347,7 +412,7 @@ namespace CraftMyFit.ViewModels.Workout
 
         private async Task ViewExercise(WorkoutExercise? workoutExercise)
         {
-            if(workoutExercise?.Exercise == null)
+            if (workoutExercise?.Exercise == null)
             {
                 return;
             }
@@ -361,7 +426,7 @@ namespace CraftMyFit.ViewModels.Workout
 
                 await _navigationService.NavigateToAsync("exercisedetail", parameters);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await _dialogService.ShowAlertAsync("Errore", $"Errore nella visualizzazione dell'esercizio: {ex.Message}");
             }
@@ -381,6 +446,25 @@ namespace CraftMyFit.ViewModels.Workout
             _ => dayOfWeek.ToString()
         };
 
+        private void SubscribeToWorkoutDaysCollectionChanged()
+        {
+            if (_workoutDays != null)
+            {
+                _workoutDays.CollectionChanged -= WorkoutDays_CollectionChanged;
+                _workoutDays.CollectionChanged += WorkoutDays_CollectionChanged;
+            }
+        }
+
+        private void WorkoutDays_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            OnPropertyChanged(nameof(HasWorkoutDays));
+            OnPropertyChanged(nameof(WorkoutDaysCount));
+            OnPropertyChanged(nameof(WorkoutDaysCountText));
+            OnPropertyChanged(nameof(TotalExercisesCount));
+            OnPropertyChanged(nameof(TotalExercisesText));
+            OnPropertyChanged(nameof(WorkoutDaysListText));
+        }
+
         #endregion
 
         #region Public Methods
@@ -391,10 +475,27 @@ namespace CraftMyFit.ViewModels.Workout
 
         public void OnAppearing()
         {
-            // Ricarica i dettagli quando la pagina appare
-            if(WorkoutPlan != null)
+            // Call LoadDetails whenever the page appears to ensure data is up to date
+            if (WorkoutPlan != null)
             {
-                _ = Task.Run(LoadDetails);
+                _ = LoadDetails();
+            }
+        }
+
+        public void ApplyQueryAttributes(IDictionary<string, object> query)
+        {
+            if (query.ContainsKey("WorkoutPlan"))
+            {
+                var plan = query["WorkoutPlan"] as WorkoutPlan;
+                WorkoutPlan = plan;
+            }
+
+            if (query.ContainsKey("Refresh"))
+            {
+                if (query["Refresh"] is bool shouldRefresh && shouldRefresh)
+                {
+                    RefreshRequest = true;
+                }
             }
         }
 

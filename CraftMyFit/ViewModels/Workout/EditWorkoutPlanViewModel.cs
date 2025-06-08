@@ -123,6 +123,8 @@ namespace CraftMyFit.ViewModels.Workout
                     if (_workoutDays != null)
                         _workoutDays.CollectionChanged += WorkoutDays_CollectionChanged;
                     OnPropertyChanged(nameof(HasWorkoutDays));
+                    // Risottoscrivi sempre gli eventi Exercises.CollectionChanged
+                    SubscribeToExercisesCollectionChanged();
                 }
             }
         }
@@ -215,11 +217,39 @@ namespace CraftMyFit.ViewModels.Workout
                         day.IsSelected = workoutDays.Contains(day.Day);
                     }
 
-                    // Inizializza i workout days - correzione dell'operatore ??
-                    WorkoutDays = fullPlan.WorkoutDays != null ? [.. fullPlan.WorkoutDays.OrderBy(wd => wd.OrderIndex)] : [];
+                    // Crea nuovi WorkoutDay con ObservableCollection per gli esercizi
+                    var newWorkoutDays = new ObservableCollection<WorkoutDay>();
+                    if (fullPlan.WorkoutDays != null)
+                    {
+                        foreach (var originalDay in fullPlan.WorkoutDays.OrderBy(wd => wd.OrderIndex))
+                        {
+                            var workoutDay = new WorkoutDay
+                            {
+                                Id = originalDay.Id,
+                                DayOfWeek = originalDay.DayOfWeek,
+                                Title = originalDay.Title,
+                                OrderIndex = originalDay.OrderIndex,
+                                WorkoutPlanId = originalDay.WorkoutPlanId,
+                                WorkoutPlan = originalDay.WorkoutPlan,
+                                Exercises = new ObservableCollection<WorkoutExercise>(originalDay.Exercises ?? [])
+                            };
+                            newWorkoutDays.Add(workoutDay);
+                        }
+                    }
+
+                    WorkoutDays = newWorkoutDays;
+
+                    // Sottoscrivi CollectionChanged su Exercises di ogni giorno
+                    SubscribeToExercisesCollectionChanged();
 
                     Title = $"Modifica: {fullPlan.Title}";
                     HasChanges = false;
+
+                    System.Diagnostics.Debug.WriteLine($"Piano caricato: {fullPlan.Title} con {WorkoutDays.Count} giorni");
+                    foreach (var day in WorkoutDays)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Giorno {day.DayOfWeek}: {day.Exercises?.Count ?? 0} esercizi");
+                    }
                 }
             }
             catch (Exception ex)
@@ -265,12 +295,14 @@ namespace CraftMyFit.ViewModels.Workout
                 DayOfWeek = day,
                 Title = GetDefaultWorkoutDayTitle(day),
                 OrderIndex = (int)day,
-                Exercises = [],
+                Exercises = new ObservableCollection<WorkoutExercise>(),
                 WorkoutPlanId = WorkoutPlan?.Id ?? 0,
                 WorkoutPlan = WorkoutPlan!
             };
 
             WorkoutDays.Add(workoutDay);
+            // Sottoscrivi agli eventi dopo aver aggiunto il giorno
+            SubscribeToExercisesCollectionChanged();
         }
 
         private void RemoveWorkoutDayForDay(DayOfWeek day)
@@ -309,7 +341,33 @@ namespace CraftMyFit.ViewModels.Workout
                            !SelectedDays.OrderBy(d => d).SequenceEqual(WorkoutPlan.WorkoutDaysEnum.OrderBy(d => d)) ||
                            WorkoutDays.Count != (WorkoutPlan.WorkoutDays?.Count ?? 0);
 
+            // Controlla anche se sono stati aggiunti/rimossi esercizi nei giorni
+            if (!hasChanges && WorkoutPlan.WorkoutDays != null)
+            {
+                foreach (var day in WorkoutDays)
+                {
+                    var originalDay = WorkoutPlan.WorkoutDays.FirstOrDefault(wd => wd.DayOfWeek == day.DayOfWeek);
+                    if (originalDay == null)
+                    {
+                        hasChanges = true;
+                        System.Diagnostics.Debug.WriteLine($"Giorno {day.DayOfWeek} aggiunto");
+                        break;
+                    }
+                    var currentExerciseIds = day.Exercises?.Select(e => e.ExerciseId).OrderBy(id => id).ToList() ?? [];
+                    var originalExerciseIds = originalDay.Exercises?.Select(e => e.ExerciseId).OrderBy(id => id).ToList() ?? [];
+                    if (!currentExerciseIds.SequenceEqual(originalExerciseIds))
+                    {
+                        hasChanges = true;
+                        System.Diagnostics.Debug.WriteLine($"Cambio esercizi nel giorno {day.DayOfWeek}");
+                        System.Diagnostics.Debug.WriteLine($"Originali: {string.Join(",", originalExerciseIds)}");
+                        System.Diagnostics.Debug.WriteLine($"Attuali: {string.Join(",", currentExerciseIds)}");
+                        break;
+                    }
+                }
+            }
+
             HasChanges = hasChanges;
+            System.Diagnostics.Debug.WriteLine($"HasChanges: {hasChanges}");
         }
 
         private bool CanSaveChanges()
@@ -331,22 +389,49 @@ namespace CraftMyFit.ViewModels.Workout
             {
                 IsSaving = true;
 
-                // Aggiorna il piano esistente
+                // Update the existing plan
                 WorkoutPlan.Title = PlanTitle.Trim();
                 WorkoutPlan.Description = PlanDescription?.Trim() ?? string.Empty;
                 WorkoutPlan.ModifiedDate = DateTime.Now;
                 WorkoutPlan.WorkoutDaysEnum = SelectedDays.ToList();
-                WorkoutPlan.WorkoutDays = WorkoutDays.ToList();
+                WorkoutPlan.WorkoutDaysJson = System.Text.Json.JsonSerializer.Serialize(SelectedDays);
 
-                // Salva nel database
+                // Create clean list of workout days
+                var updatedWorkoutDays = new List<WorkoutDay>();
+                foreach (var day in WorkoutDays)
+                {
+                    var cleanDay = new WorkoutDay
+                    {
+                        Id = day.Id,
+                        DayOfWeek = day.DayOfWeek,
+                        Title = day.Title,
+                        OrderIndex = day.OrderIndex,
+                        WorkoutPlanId = WorkoutPlan.Id,
+                        WorkoutPlan = WorkoutPlan,
+                        Exercises = day.Exercises
+                    };
+                    updatedWorkoutDays.Add(cleanDay);
+                }
+                WorkoutPlan.WorkoutDays = updatedWorkoutDays;
+
+                // Save to database
                 await _workoutPlanRepository.UpdateAsync(WorkoutPlan);
 
-                // TODO: Aggiornare anche i WorkoutDay e WorkoutExercise separatamente
-
-                await _dialogService.ShowAlertAsync("Successo", "Piano di allenamento aggiornato con successo!");
-
                 HasChanges = false;
-                await _navigationService.GoBackAsync();
+
+                // Get fresh data after save
+                var updatedPlan = await _workoutPlanRepository.GetWorkoutPlanWithDetailsAsync(WorkoutPlan.Id);
+                if (updatedPlan != null)
+                {
+                    await Shell.Current.GoToAsync("..", new Dictionary<string, object>
+                    {
+                        { "WorkoutPlan", updatedPlan }
+                    });
+                }
+                else
+                {
+                    await _navigationService.GoBackAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -473,7 +558,9 @@ namespace CraftMyFit.ViewModels.Workout
             if (confirmed)
             {
                 _ = (day.Exercises?.Remove(exercise));
+                // Check e aggiorna comando
                 CheckForChanges();
+                ((Command)SaveChangesCommand).ChangeCanExecute();
             }
         }
 
@@ -500,6 +587,40 @@ namespace CraftMyFit.ViewModels.Workout
         private void WorkoutDays_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
         {
             OnPropertyChanged(nameof(HasWorkoutDays));
+            OnPropertyChanged(nameof(WorkoutDaysCountText));
+            // Risottoscrivi CollectionChanged su Exercises di ogni giorno
+            SubscribeToExercisesCollectionChanged();
+            // Aggiorna stato modifiche e comando
+            CheckForChanges();
+            ((Command)SaveChangesCommand).ChangeCanExecute();
+            // Se hai altre proprietà calcolate che dipendono da WorkoutDays, aggiungile qui
+        }
+
+        private void SubscribeToExercisesCollectionChanged()
+        {
+            foreach (var day in WorkoutDays)
+            {
+                if (day.Exercises != null)
+                {
+                    day.Exercises.CollectionChanged -= Exercises_CollectionChanged;
+                    day.Exercises.CollectionChanged += Exercises_CollectionChanged;
+                }
+            }
+        }
+
+        private void Exercises_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            System.Diagnostics.Debug.WriteLine($"Exercises_CollectionChanged: {e.Action}");
+            if (e.NewItems != null)
+            {
+                foreach (WorkoutExercise exercise in e.NewItems)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Aggiunto esercizio: {exercise.Exercise?.Name}");
+                }
+            }
+
+            CheckForChanges();
+            ((Command)SaveChangesCommand).ChangeCanExecute();
         }
 
         #endregion
@@ -519,6 +640,14 @@ namespace CraftMyFit.ViewModels.Workout
                 WorkoutDay? workoutDay = WorkoutDays.FirstOrDefault(wd => wd.Id == _pendingAddExerciseDayId.Value);
                 if (workoutDay != null && selectedExercise != null)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Aggiungendo esercizio {selectedExercise.Name} al giorno {workoutDay.DayOfWeek}");
+
+                    if (workoutDay.Exercises == null)
+                    {
+                        workoutDay.Exercises = new ObservableCollection<WorkoutExercise>();
+                        System.Diagnostics.Debug.WriteLine("Creata nuova ObservableCollection per Exercises");
+                    }
+
                     WorkoutExercise workoutExercise = new()
                     {
                         ExerciseId = selectedExercise.Id,
@@ -529,8 +658,12 @@ namespace CraftMyFit.ViewModels.Workout
                         RestTime = TimeSpan.FromSeconds(60),
                         OrderIndex = workoutDay.Exercises.Count
                     };
+
                     workoutDay.Exercises.Add(workoutExercise);
+                    System.Diagnostics.Debug.WriteLine($"Esercizio aggiunto. Totale esercizi: {workoutDay.Exercises.Count}");
+
                     CheckForChanges();
+                    ((Command)SaveChangesCommand).ChangeCanExecute();
                 }
 
                 _pendingAddExerciseDayId = null;
